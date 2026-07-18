@@ -5,11 +5,20 @@ import { getCargas } from '@/repositories/carga.repository'
 export default async function CargasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ alerta?: string }>
+  searchParams: Promise<{ alerta?: string; q?: string }>
 }) {
-  const { alerta } = await searchParams
+  const { alerta, q } = await searchParams
   const supabase = await createClient()
-  const cargas = await getCargas(supabase)
+  const todasLasCargas = await getCargas(supabase)
+
+  const cargas = q
+    ? todasLasCargas.filter((c) => {
+        const unidad = (c as any).vehiculos?.numero_economico ?? ''
+        const folio = c.folio_ticket ?? ''
+        const termino = q.toLowerCase()
+        return unidad.toLowerCase().includes(termino) || folio.toLowerCase().includes(termino)
+      })
+    : todasLasCargas
 
   return (
     <div className="space-y-6">
@@ -29,10 +38,21 @@ export default async function CargasPage({
         </Link>
       </div>
 
+      <form>
+        <input
+          type="text"
+          name="q"
+          defaultValue={q ?? ''}
+          placeholder="Buscar por unidad o folio de ticket..."
+          className="w-full max-w-sm rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+        />
+      </form>
+
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 text-slate-500 text-xs uppercase">
             <tr>
+              <th className="text-left px-4 py-3">Unidad</th>
               <th className="text-left px-4 py-3">Fecha</th>
               <th className="text-left px-4 py-3">Kilometraje</th>
               <th className="text-left px-4 py-3">Litros</th>
@@ -44,13 +64,14 @@ export default async function CargasPage({
           <tbody className="divide-y divide-slate-100">
             {cargas.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
-                  Aún no hay cargas registradas.
+                <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                  {q ? `No se encontraron cargas para "${q}".` : 'Aún no hay cargas registradas.'}
                 </td>
               </tr>
             ) : (
               cargas.map((c) => (
                 <tr key={c.id}>
+                  <td className="px-4 py-3 font-medium text-slate-900">{(c as any).vehiculos?.numero_economico ?? '—'}</td>
                   <td className="px-4 py-3 text-slate-600">{new Date(c.fecha_hora).toLocaleString('es-MX')}</td>
                   <td className="px-4 py-3 text-slate-600">{c.kilometraje}</td>
                   <td className="px-4 py-3 text-slate-600">{c.litros_cargados} L</td>

@@ -14,9 +14,14 @@ const ESTADO_COLOR: Record<string, string> = {
   baja: 'bg-red-100 text-red-700',
 }
 
-export default async function VehiculosPage() {
+export default async function VehiculosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>
+}) {
+  const { q } = await searchParams
   const supabase = await createClient()
-  const vehiculos = await getVehiculos(supabase)
+  const vehiculos = await getVehiculos(supabase, undefined, q)
 
   return (
     <div className="space-y-6">
@@ -29,6 +34,16 @@ export default async function VehiculosPage() {
           + Nuevo vehículo
         </Link>
       </div>
+
+      <form>
+        <input
+          type="text"
+          name="q"
+          defaultValue={q ?? ''}
+          placeholder="Buscar por número económico, placas o marca..."
+          className="w-full max-w-sm rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+        />
+      </form>
 
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <table className="w-full text-sm">
@@ -45,7 +60,7 @@ export default async function VehiculosPage() {
             {vehiculos.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
-                  Aún no hay vehículos registrados.
+                  {q ? `No se encontraron vehículos para "${q}".` : 'Aún no hay vehículos registrados.'}
                 </td>
               </tr>
             ) : (

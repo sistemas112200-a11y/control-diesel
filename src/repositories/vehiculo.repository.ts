@@ -2,7 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Vehiculo } from '@/lib/supabase/types'
 import type { VehiculoInput } from '@/lib/validation/vehiculo.schema'
 
-export async function getVehiculos(supabase: SupabaseClient, terminalId?: string) {
+export async function getVehiculos(supabase: SupabaseClient, terminalId?: string, busqueda?: string) {
   let query = supabase
     .from('vehiculos')
     .select('*')
@@ -10,6 +10,7 @@ export async function getVehiculos(supabase: SupabaseClient, terminalId?: string
     .order('numero_economico')
 
   if (terminalId) query = query.eq('terminal_id', terminalId)
+  if (busqueda) query = query.or(`numero_economico.ilike.%${busqueda}%,placas.ilike.%${busqueda}%,marca.ilike.%${busqueda}%`)
 
   const { data, error } = await query
   if (error) throw error
@@ -58,4 +59,4 @@ export async function eliminarVehiculo(supabase: SupabaseClient, id: string) {
     .eq('id', id)
 
   if (error) throw error
-}
+}   

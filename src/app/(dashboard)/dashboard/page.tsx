@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 
 function inicioDeHoy() {
@@ -20,7 +21,7 @@ export default async function DashboardPage() {
     supabase.from('cargas_combustible').select('litros_cargados').gte('fecha_hora', inicioDeHoy()).is('deleted_at', null),
     supabase.from('cargas_combustible').select('total_pagado, rendimiento_km_l').gte('fecha_hora', inicioDeMes()).is('deleted_at', null),
     supabase.from('alertas').select('id, severidad').eq('estado', 'nueva'),
-    supabase.from('vehiculos').select('id, numero_economico, rendimiento_esperado_km_l').is('deleted_at', null),
+    supabase.from('vehiculos').select('id, numero_economico, marca, modelo, rendimiento_esperado_km_l').is('deleted_at', null),
   ])
 
   const litrosHoy = (cargasHoy ?? []).reduce((sum, c) => sum + c.litros_cargados, 0)
@@ -42,17 +43,39 @@ export default async function DashboardPage() {
         <TarjetaKpi label="Alertas activas" valor={String(totalAlertas)} destacado={totalAlertas > 0} />
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 p-4">
-        <h2 className="text-sm font-medium text-slate-700 mb-3">Flota registrada</h2>
-        {(vehiculos ?? []).length === 0 ? (
-          <p className="text-sm text-slate-500">Aún no hay vehículos registrados.</p>
-        ) : (
-          <ul className="text-sm text-slate-700 space-y-1">
-            {vehiculos!.map((v) => (
-              <li key={v.id}>{v.numero_economico} — rendimiento esperado {v.rendimiento_esperado_km_l} km/L</li>
-            ))}
-          </ul>
-        )}
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+          <h2 className="text-sm font-medium text-slate-700">Flota registrada</h2>
+          <Link href="/vehiculos" className="text-xs text-brand-dark hover:underline font-medium">
+            Ver todas
+          </Link>
+        </div>
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50 text-slate-500 text-xs uppercase">
+            <tr>
+              <th className="text-left px-4 py-2">Unidad</th>
+              <th className="text-left px-4 py-2">Marca / Modelo</th>
+              <th className="text-left px-4 py-2">Rendimiento esperado</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {(vehiculos ?? []).length === 0 ? (
+              <tr>
+                <td colSpan={3} className="px-4 py-6 text-center text-slate-500">
+                  Aún no hay vehículos registrados.
+                </td>
+              </tr>
+            ) : (
+              vehiculos!.map((v) => (
+                <tr key={v.id}>
+                  <td className="px-4 py-2 font-medium text-slate-900">{v.numero_economico}</td>
+                  <td className="px-4 py-2 text-slate-600">{v.marca} {v.modelo}</td>
+                  <td className="px-4 py-2 text-slate-600">{v.rendimiento_esperado_km_l} km/L</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   )

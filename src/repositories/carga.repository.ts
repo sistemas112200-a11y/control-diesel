@@ -5,7 +5,7 @@ import type { CargaInput } from '@/lib/validation/carga.schema'
 export async function getCargas(supabase: SupabaseClient, filtros: { vehiculoId?: string; terminalId?: string } = {}) {
   let query = supabase
     .from('cargas_combustible')
-    .select('*')
+    .select('*, vehiculos(numero_economico)')
     .is('deleted_at', null)
     .order('fecha_hora', { ascending: false })
 
@@ -14,7 +14,7 @@ export async function getCargas(supabase: SupabaseClient, filtros: { vehiculoId?
 
   const { data, error } = await query
   if (error) throw error
-  return data as CargaCombustible[]
+  return data as (CargaCombustible & { vehiculos: { numero_economico: string } | null })[]
 }
 
 export async function getCargaById(supabase: SupabaseClient, id: string) {
