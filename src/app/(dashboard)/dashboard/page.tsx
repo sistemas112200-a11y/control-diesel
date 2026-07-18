@@ -1,0 +1,68 @@
+import { createClient } from '@/lib/supabase/server'
+
+function inicioDeHoy() {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d.toISOString()
+}
+
+function inicioDeMes() {
+  const d = new Date()
+  d.setDate(1)
+  d.setHours(0, 0, 0, 0)
+  return d.toISOString()
+}
+
+export default async function DashboardPage() {
+  const supabase = await createClient()
+
+  const [{ data: cargasHoy }, { data: cargasMes }, { data: alertasActivas }, { data: vehiculos }] = await Promise.all([
+    supabase.from('cargas_combustible').select('litros_cargados').gte('fecha_hora', inicioDeHoy()).is('deleted_at', null),
+    supabase.from('cargas_combustible').select('total_pagado, rendimiento_km_l').gte('fecha_hora', inicioDeMes()).is('deleted_at', null),
+    supabase.from('alertas').select('id, severidad').eq('estado', 'nueva'),
+    supabase.from('vehiculos').select('id, numero_economico, rendimiento_esperado_km_l').is('deleted_at', null),
+  ])
+
+  const litrosHoy = (cargasHoy ?? []).reduce((sum, c) => sum + c.litros_cargados, 0)
+  const gastoMes = (cargasMes ?? []).reduce((sum, c) => sum + c.total_pagado, 0)
+  const rendimientos = (cargasMes ?? []).map((c) => c.rendimiento_km_l).filter((r): r is number => r != null)
+  const rendimientoPromedio = rendimientos.length
+    ? rendimientos.reduce((a, b) => a + b, 0) / rendimientos.length
+    : 0
+  const totalAlertas = alertasActivas?.length ?? 0
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-lg font-semibold text-slate-900">Dashboard</h1>
+
+      <div className="grid grid-cols-4 gap-4">
+        <TarjetaKpi label="Litros hoy" valor={`${litrosHoy.toFixed(0)} L`} />
+        <TarjetaKpi label="Gasto del mes" valor={`$${gastoMes.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`} />
+        <TarjetaKpi label="Rendimiento promedio" valor={`${rendimientoPromedio.toFixed(2)} km/L`} />
+        <TarjetaKpi label="Alertas activas" valor={String(totalAlertas)} destacado={totalAlertas > 0} />
+      </div>
+
+      <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <h2 className="text-sm font-medium text-slate-700 mb-3">Flota registrada</h2>
+        {(vehiculos ?? []).length === 0 ? (
+          <p className="text-sm text-slate-500">Aún no hay vehículos registrados.</p>
+        ) : (
+          <ul className="text-sm text-slate-700 space-y-1">
+            {vehiculos!.map((v) => (
+              <li key={v.id}>{v.numero_economico} — rendimiento esperado {v.rendimiento_esperado_km_l} km/L</li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function TarjetaKpi({ label, valor, destacado = false }: { label: string; valor: string; destacado?: boolean }) {
+  return (
+    <div className={`rounded-xl p-4 ${destacado ? 'bg-red-50' : 'bg-white border border-slate-200'}`}>
+      <p className={`text-xs mb-1 ${destacado ? 'text-red-600' : 'text-slate-500'}`}>{label}</p>
+      <p className={`text-xl font-semibold ${destacado ? 'text-red-700' : 'text-slate-900'}`}>{valor}</p>
+    </div>
+  )
+}
