@@ -29,4 +29,4 @@ export default async function QRVehiculoPage({ params }: { params: Promise<{ id:
       <BotonImprimir />
     </div>
   )
-}
+}   
