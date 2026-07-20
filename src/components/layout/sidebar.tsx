@@ -8,8 +8,6 @@ const NAV_ITEMS = [
   { href: '/vehiculos', label: 'Flota' },
   { href: '/operadores', label: 'Operadores' },
   { href: '/cargas', label: 'Cargas' },
-  { href: '/compras', label: 'Compras' },
-  { href: '/vales', label: 'Vales' },
   { href: '/reportes', label: 'Reportes' },
   { href: '/alertas', label: 'Alertas' },
   { href: '/usuarios', label: 'Usuarios' },
