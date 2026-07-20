@@ -13,7 +13,12 @@ const ROL_LABEL: Record<string, string> = {
   auditor: 'Auditor',
 }
 
-export default async function UsuariosPage() {
+export default async function UsuariosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ok?: string }>
+}) {
+  const { ok } = await searchParams
   const usuarioActual = await getUsuarioActual()
   const supabase = await createClient()
   const usuarios = await getUsuarios(supabase, usuarioActual!.empresaId)
@@ -29,6 +34,17 @@ export default async function UsuariosPage() {
           + Nuevo usuario
         </Link>
       </div>
+
+      {ok === 'rol' && (
+        <div className="rounded-md bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3">
+          Rol actualizado correctamente.
+        </div>
+      )}
+      {ok === 'password' && (
+        <div className="rounded-md bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3">
+          Contraseña restablecida correctamente.
+        </div>
+      )}
 
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <table className="w-full text-sm">
@@ -53,15 +69,20 @@ export default async function UsuariosPage() {
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  {u.id !== usuarioActual!.id && (
-                    <form action={cambiarEstadoUsuarioAction}>
-                      <input type="hidden" name="id" value={u.id} />
-                      <input type="hidden" name="nuevo_estado" value={String(!u.activo)} />
-                      <button type="submit" className="text-xs font-medium text-brand-dark hover:underline">
-                        {u.activo ? 'Desactivar' : 'Reactivar'}
-                      </button>
-                    </form>
-                  )}
+                  <div className="flex items-center gap-3">
+                    <Link href={`/usuarios/${u.id}/editar`} className="text-xs font-medium text-brand-dark hover:underline">
+                      Editar
+                    </Link>
+                    {u.id !== usuarioActual!.id && (
+                      <form action={cambiarEstadoUsuarioAction}>
+                        <input type="hidden" name="id" value={u.id} />
+                        <input type="hidden" name="nuevo_estado" value={String(!u.activo)} />
+                        <button type="submit" className="text-xs font-medium text-brand-dark hover:underline">
+                          {u.activo ? 'Desactivar' : 'Reactivar'}
+                        </button>
+                      </form>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
