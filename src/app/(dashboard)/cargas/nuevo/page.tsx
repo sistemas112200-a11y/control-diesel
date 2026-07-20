@@ -106,4 +106,4 @@ function Foto({ label, name, required = false }: { label: string; name: string; 
       <input id={name} name={name} type="file" accept="image/*" capture="environment" required={required} className="w-full text-sm" />
     </div>
   )
-}
+}   
