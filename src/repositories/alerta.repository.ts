@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { TipoAlerta, SeveridadAlerta } from '@/lib/supabase/types'
+import type { Alerta, EstadoAlerta, TipoAlerta, SeveridadAlerta } from '@/lib/supabase/types'
 
 export async function crearAlerta(supabase: SupabaseClient, alerta: {
   terminal_id: string
@@ -53,4 +53,35 @@ export async function existeTicketRepetido(supabase: SupabaseClient, folioTicket
 
   if (error) throw error
   return (data?.length ?? 0) > 0
+}
+
+export async function getAlertas(
+  supabase: SupabaseClient,
+  filtros?: { estado?: EstadoAlerta; severidad?: string }
+) {
+  let query = supabase
+    .from('alertas')
+    .select('*, vehiculos(numero_economico), operadores(nombre_completo)')
+    .order('created_at', { ascending: false })
+
+  if (filtros?.estado) query = query.eq('estado', filtros.estado)
+  if (filtros?.severidad) query = query.eq('severidad', filtros.severidad)
+
+  const { data, error } = await query
+  if (error) throw error
+  return data as (Alerta & { vehiculos: { numero_economico: string } | null; operadores: { nombre_completo: string } | null })[]
+}
+
+export async function cambiarEstadoAlerta(
+  supabase: SupabaseClient,
+  id: string,
+  estado: EstadoAlerta,
+  responsableId: string
+) {
+  const { error } = await supabase
+    .from('alertas')
+    .update({ estado, responsable_id: responsableId, updated_at: new Date().toISOString() })
+    .eq('id', id)
+
+  if (error) throw error
 }

@@ -54,12 +54,13 @@ export default async function VehiculosPage({
               <th className="text-left px-4 py-3">Marca / Modelo</th>
               <th className="text-left px-4 py-3">Rendimiento esperado</th>
               <th className="text-left px-4 py-3">Estado</th>
+              <th className="text-left px-4 py-3"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {vehiculos.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
                   {q ? `No se encontraron vehículos para "${q}".` : 'Aún no hay vehículos registrados.'}
                 </td>
               </tr>
@@ -74,6 +75,11 @@ export default async function VehiculosPage({
                     <span className={`rounded-full px-2 py-1 text-xs font-medium ${ESTADO_COLOR[v.estado]}`}>
                       {ESTADO_LABEL[v.estado]}
                     </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <Link href={`/vehiculos/${v.id}/qr`} className="text-xs font-medium text-brand-dark hover:underline">
+                      Ver QR
+                    </Link>
                   </td>
                 </tr>
               ))

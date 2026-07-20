@@ -1,6 +1,6 @@
 import type { RolUsuario } from '@/lib/supabase/types'
 
-type Modulo = 'vehiculos' | 'operadores' | 'cargas' | 'compras' | 'vales' | 'usuarios'
+type Modulo = 'vehiculos' | 'operadores' | 'cargas' | 'compras' | 'vales' | 'usuarios' | 'alertas'
 type Accion = 'crear' | 'editar' | 'eliminar'
 
 const PERMISOS: Record<Modulo, Record<Accion, RolUsuario[]>> = {
@@ -32,6 +32,11 @@ const PERMISOS: Record<Modulo, Record<Accion, RolUsuario[]>> = {
   usuarios: {
     crear: ['administrador'],
     editar: ['administrador'],
+    eliminar: ['administrador'],
+  },
+  alertas: {
+    crear: ['administrador', 'supervisor'],
+    editar: ['administrador', 'supervisor'],
     eliminar: ['administrador'],
   },
 }
