@@ -10,6 +10,7 @@ export default async function NuevaCargaPage() {
     .from('operadores')
     .select('id, nombre_completo')
     .is('deleted_at', null)
+    .eq('activo', true)
 
   const { data: { user } } = await supabase.auth.getUser()
   const { data: terminal } = await supabase
