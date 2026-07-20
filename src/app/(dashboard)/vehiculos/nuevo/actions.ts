@@ -41,7 +41,7 @@ export async function crearVehiculoAction(formData: FormData) {
   } catch (error) {
     let mensaje = 'No se pudo guardar el vehículo, revisa los datos.'
     if (error instanceof z.ZodError) {
-      mensaje = error.errors.map((e) => e.message).join(' / ')
+      mensaje = error.issues.map((e) => e.message).join(' / ')
     } else if (error instanceof Error) {
       mensaje = error.message
     }
