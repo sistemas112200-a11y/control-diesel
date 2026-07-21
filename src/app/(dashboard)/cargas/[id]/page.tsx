@@ -1,83 +1,104 @@
-import { notFound, redirect } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { getCargaById } from '@/repositories/carga.repository'
+import { getCargas } from '@/repositories/carga.repository'
 import { getUsuarioActual } from '@/lib/auth/session'
 import { puedeVerDetalleCargas } from '@/lib/auth/permissions'
 
-export default async function DetalleCargaPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-
-  const usuarioActual = await getUsuarioActual()
-  if (!usuarioActual || !puedeVerDetalleCargas(usuarioActual.rol)) {
-    redirect('/cargas')
-  }
-
+export default async function CargasPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ alerta?: string; q?: string }>
+}) {
+  const { alerta, q } = await searchParams
   const supabase = await createClient()
+  const usuarioActual = await getUsuarioActual()
+  const mostrarDetalle = usuarioActual ? puedeVerDetalleCargas(usuarioActual.rol) : false
 
-  let carga
-  try {
-    carga = await getCargaById(supabase, id)
-  } catch {
-    notFound()
+  let todasLasCargas = await getCargas(supabase)
+
+  if (usuarioActual?.rol === 'operador') {
+    todasLasCargas = todasLasCargas.filter((c) => (c as any).created_by === usuarioActual.id)
   }
 
-  const { data: vehiculo } = await supabase.from('vehiculos').select('numero_economico').eq('id', carga.vehiculo_id).single()
-  const { data: operador } = await supabase.from('operadores').select('nombre_completo').eq('id', carga.operador_id).single()
-  const { data: capturadaPor } = await supabase.from('usuarios').select('nombre_completo').eq('id', carga.created_by).single()
-
-  const fotos = [
-    { label: 'Ticket', url: carga.foto_ticket_url },
-    { label: 'Kilometraje', url: carga.foto_kilometraje_url },
-    { label: 'Bomba', url: carga.foto_bomba_url },
-    { label: 'Tanque 1', url: carga.foto_tanque1_url },
-    { label: 'Tanque 2', url: carga.foto_tanque2_url },
-  ].filter((f) => f.url)
+  const cargas = q
+    ? todasLasCargas.filter((c) => {
+        const unidad = (c as any).vehiculos?.numero_economico ?? ''
+        const folio = c.folio_ticket ?? ''
+        const termino = q.toLowerCase()
+        return unidad.toLowerCase().includes(termino) || folio.toLowerCase().includes(termino)
+      })
+    : todasLasCargas
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <h1 className="text-lg font-semibold text-slate-900">Detalle de carga</h1>
-
-      <div className="bg-white rounded-xl border border-slate-200 p-6 grid grid-cols-2 gap-4 text-sm">
-        <Dato label="Unidad" valor={vehiculo?.numero_economico ?? '—'} />
-        <Dato label="Operador" valor={operador?.nombre_completo ?? '—'} />
-        <Dato label="Fecha" valor={new Date(carga.fecha_hora).toLocaleString('es-MX')} />
-        <Dato label="Kilometraje" valor={String(carga.kilometraje)} />
-        <Dato label="Litros cargados" valor={`${carga.litros_cargados} L`} />
-        <Dato label="Precio por litro" valor={`$${carga.precio_litro}`} />
-        <Dato label="Total pagado" valor={`$${carga.total_pagado.toFixed(2)}`} />
-        <Dato label="Método de pago" valor={carga.metodo_pago} />
-        <Dato label="Folio de ticket" valor={carga.folio_ticket ?? '—'} />
-        <Dato label="Km recorridos" valor={carga.km_recorridos != null ? String(carga.km_recorridos) : '—'} />
-        <Dato label="Rendimiento" valor={carga.rendimiento_km_l != null ? `${carga.rendimiento_km_l.toFixed(2)} km/L` : '—'} />
-        <Dato label="Costo por km" valor={carga.costo_por_km != null ? `$${carga.costo_por_km.toFixed(2)}` : '—'} />
-        <Dato label="Capturado por" valor={capturadaPor?.nombre_completo ?? '—'} />
-        {carga.observaciones && (
-          <div className="col-span-2">
-            <Dato label="Observaciones" valor={carga.observaciones} />
-          </div>
-        )}
-      </div>
-
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h2 className="text-sm font-medium text-slate-700 mb-4">Evidencia fotográfica</h2>
-        <div className="grid grid-cols-3 gap-4">
-          {fotos.map((f) => (
-            <a key={f.label} href={f.url!} target="_blank" rel="noopener noreferrer" className="block">
-              <img src={f.url!} alt={f.label} className="w-full h-32 object-cover rounded-md border border-slate-200" />
-              <p className="text-xs text-slate-500 mt-1 text-center">{f.label}</p>
-            </a>
-          ))}
+    <div className="space-y-6">
+      {alerta && (
+        <div className="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+          Carga guardada, pero se generó una alerta: {alerta}
         </div>
-      </div>
-    </div>
-  )
-}
+      )}
 
-function Dato({ label, valor }: { label: string; valor: string }) {
-  return (
-    <div>
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className="text-slate-900 font-medium">{valor}</p>
+      <div className="flex items-center justify-between">
+        <h1 className="text-lg font-semibold text-slate-900">Cargas de combustible</h1>
+        <Link
+          href="/cargas/nuevo"
+          className="rounded-md bg-brand hover:bg-brand-dark text-white text-sm font-medium px-4 py-2 transition-colors"
+        >
+          + Nueva carga
+        </Link>
+      </div>
+
+      <form>
+        <input
+          type="text"
+          name="q"
+          defaultValue={q ?? ''}
+          placeholder="Buscar por unidad o folio de ticket..."
+          className="w-full max-w-sm rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+        />
+      </form>
+
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50 text-slate-500 text-xs uppercase">
+            <tr>
+              <th className="text-left px-4 py-3">Unidad</th>
+              <th className="text-left px-4 py-3">Fecha</th>
+              <th className="text-left px-4 py-3">Kilometraje</th>
+              <th className="text-left px-4 py-3">Litros</th>
+              <th className="text-left px-4 py-3">Total</th>
+              <th className="text-left px-4 py-3">Rendimiento</th>
+              {mostrarDetalle && <th className="text-left px-4 py-3">Detalle</th>}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {cargas.length === 0 ? (
+              <tr>
+                <td colSpan={mostrarDetalle ? 7 : 6} className="px-4 py-8 text-center text-slate-500">
+                  {q ? `No se encontraron cargas para "${q}".` : 'Aún no hay cargas registradas.'}
+                </td>
+              </tr>
+            ) : (
+              cargas.map((c) => (
+                <tr key={c.id}>
+                  <td className="px-4 py-3 font-medium text-slate-900">{(c as any).vehiculos?.numero_economico ?? '—'}</td>
+                  <td className="px-4 py-3 text-slate-600">{new Date(c.fecha_hora).toLocaleString('es-MX')}</td>
+                  <td className="px-4 py-3 text-slate-600">{c.kilometraje}</td>
+                  <td className="px-4 py-3 text-slate-600">{c.litros_cargados} L</td>
+                  <td className="px-4 py-3 text-slate-600">${c.total_pagado.toFixed(2)}</td>
+                  <td className="px-4 py-3 text-slate-600">{c.rendimiento_km_l ? `${c.rendimiento_km_l.toFixed(2)} km/L` : '—'}</td>
+                  {mostrarDetalle && (
+                    <td className="px-4 py-3">
+                      <Link href={`/cargas/${c.id}`} className="text-brand-dark hover:underline font-medium">
+                        Ver fotos
+                      </Link>
+                    </td>
+                  )}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
