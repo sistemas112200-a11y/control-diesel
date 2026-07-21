@@ -91,6 +91,9 @@ export default async function VehiculosPage({
                       <Link href={`/vehiculos/${v.id}/qr`} className="text-xs font-medium text-brand-dark hover:underline">
                         Ver QR
                       </Link>
+                      <Link href={`/vehiculos/${v.id}/mantenimiento`} className="text-xs font-medium text-brand-dark hover:underline">
+                        Mantenimiento
+                      </Link>
                       <form action={cambiarEstadoVehiculoAction}>
                         <input type="hidden" name="id" value={v.id} />
                         <input type="hidden" name="nuevo_estado" value={v.estado === 'activo' ? 'baja' : 'activo'} />

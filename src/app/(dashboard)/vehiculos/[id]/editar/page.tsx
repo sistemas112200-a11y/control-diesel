@@ -1,114 +1,127 @@
 import Link from 'next/link'
+import QRCode from 'qrcode'
 import { createClient } from '@/lib/supabase/server'
-import { getVehiculos } from '@/repositories/vehiculo.repository'
-import { cambiarEstadoVehiculoAction } from './actions'
+import { getVehiculoById } from '@/repositories/vehiculo.repository'
+import { actualizarVehiculoAction } from './actions'
 
-const ESTADO_LABEL: Record<string, string> = {
-  activo: 'Activo',
-  taller: 'En taller',
-  baja: 'Baja',
-}
-
-const ESTADO_COLOR: Record<string, string> = {
-  activo: 'bg-green-100 text-green-700',
-  taller: 'bg-amber-100 text-amber-700',
-  baja: 'bg-red-100 text-red-700',
-}
-
-export default async function VehiculosPage({
+export default async function EditarVehiculoPage({
+  params,
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; ok?: string }>
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ error?: string }>
 }) {
-  const { q, ok } = await searchParams
+  const { id } = await params
+  const { error } = await searchParams
   const supabase = await createClient()
-  const vehiculos = await getVehiculos(supabase, undefined, q)
+  const vehiculo = await getVehiculoById(supabase, id)
+
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+  const urlCarga = `${baseUrl}/cargas/nuevo?vehiculo_id=${vehiculo.id}`
+  const qrDataUrl = await QRCode.toDataURL(urlCarga, { width: 300, margin: 1 })
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-slate-900">Flota</h1>
-        <Link
-          href="/vehiculos/nuevo"
-          className="rounded-md bg-brand hover:bg-brand-dark text-white text-sm font-medium px-4 py-2 transition-colors"
-        >
-          + Nuevo vehículo
-        </Link>
-      </div>
+    <div className="max-w-xl space-y-6">
+      <h1 className="text-lg font-semibold text-slate-900">Editar vehículo</h1>
 
-      {ok === 'vehiculo' && (
-        <div className="rounded-md bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3">
-          Vehículo actualizado correctamente.
-        </div>
+      {error && (
+        <div className="rounded-md bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3">{error}</div>
       )}
 
-      <form>
-        <input
-          type="text"
-          name="q"
-          defaultValue={q ?? ''}
-          placeholder="Buscar por número económico, placas o marca..."
-          className="w-full max-w-sm rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-        />
-      </form>
-
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-500 text-xs uppercase">
-            <tr>
-              <th className="text-left px-4 py-3">Número económico</th>
-              <th className="text-left px-4 py-3">Placas</th>
-              <th className="text-left px-4 py-3">Marca / Modelo</th>
-              <th className="text-left px-4 py-3">Rendimiento esperado</th>
-              <th className="text-left px-4 py-3">Estado</th>
-              <th className="text-left px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {vehiculos.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
-                  {q ? `No se encontraron vehículos para "${q}".` : 'Aún no hay vehículos registrados.'}
-                </td>
-              </tr>
-            ) : (
-              vehiculos.map((v) => (
-                <tr key={v.id}>
-                  <td className="px-4 py-3 font-medium text-slate-900">{v.numero_economico}</td>
-                  <td className="px-4 py-3 text-slate-600">{v.placas ?? '—'}</td>
-                  <td className="px-4 py-3 text-slate-600">{v.marca} {v.modelo}</td>
-                  <td className="px-4 py-3 text-slate-600">{v.rendimiento_esperado_km_l} km/L</td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-1 text-xs font-medium ${ESTADO_COLOR[v.estado]}`}>
-                      {ESTADO_LABEL[v.estado]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <Link href={`/vehiculos/${v.id}/editar`} className="text-xs font-medium text-brand-dark hover:underline">
-                        Editar
-                      </Link>
-                      <Link href={`/vehiculos/${v.id}/qr`} className="text-xs font-medium text-brand-dark hover:underline">
-                        Ver QR
-                      </Link>
-                      <Link href={`/vehiculos/${v.id}/mantenimiento`} className="text-xs font-medium text-brand-dark hover:underline">
-                        Mantenimiento
-                      </Link>
-                      <form action={cambiarEstadoVehiculoAction}>
-                        <input type="hidden" name="id" value={v.id} />
-                        <input type="hidden" name="nuevo_estado" value={v.estado === 'activo' ? 'baja' : 'activo'} />
-                        <button type="submit" className="text-xs font-medium text-brand-dark hover:underline">
-                          {v.estado === 'activo' ? 'Desactivar' : 'Activar'}
-                        </button>
-                      </form>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+      <div className="bg-white rounded-xl border border-slate-200 p-6 flex items-center gap-6">
+        <img src={qrDataUrl} alt={`QR de la unidad ${vehiculo.numero_economico}`} className="w-32 h-32 shrink-0" />
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-slate-900">Código QR — {vehiculo.numero_economico}</p>
+          <p className="text-xs text-slate-500">
+            Al escanearlo se abre "Nueva carga" con esta unidad ya seleccionada.
+          </p>
+          <div className="flex gap-4">
+            <Link
+              href={`/vehiculos/${vehiculo.id}/qr`}
+              className="inline-block text-xs font-medium text-brand-dark hover:underline"
+            >
+              Ver en grande / Imprimir
+            </Link>
+            <Link
+              href={`/vehiculos/${vehiculo.id}/mantenimiento`}
+              className="inline-block text-xs font-medium text-brand-dark hover:underline"
+            >
+              Ver mantenimiento
+            </Link>
+          </div>
+        </div>
       </div>
+
+      <form action={actualizarVehiculoAction} className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+        <input type="hidden" name="id" value={vehiculo.id} />
+        <Campo label="Número económico" name="numero_economico" defaultValue={vehiculo.numero_economico} required />
+        <div className="grid grid-cols-2 gap-4">
+          <Campo label="Placas" name="placas" defaultValue={vehiculo.placas ?? ''} />
+          <Campo label="Año" name="anio" type="number" defaultValue={vehiculo.anio != null ? String(vehiculo.anio) : ''} />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <Campo label="Marca" name="marca" defaultValue={vehiculo.marca ?? ''} />
+          <Campo label="Modelo" name="modelo" defaultValue={vehiculo.modelo ?? ''} />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <Campo
+            label="Capacidad de tanque (L)"
+            name="capacidad_tanque1_litros"
+            type="number"
+            step="0.01"
+            defaultValue={String(vehiculo.capacidad_tanque1_litros)}
+            required
+          />
+          <Campo
+            label="Rendimiento esperado (km/L)"
+            name="rendimiento_esperado_km_l"
+            type="number"
+            step="0.01"
+            defaultValue={String(vehiculo.rendimiento_esperado_km_l)}
+            required
+          />
+        </div>
+        <Campo
+          label="Intervalo de mantenimiento (km) — opcional"
+          name="intervalo_mantenimiento_km"
+          type="number"
+          defaultValue={vehiculo.intervalo_mantenimiento_km != null ? String(vehiculo.intervalo_mantenimiento_km) : ''}
+        />
+        <button type="submit" className="w-full rounded-md bg-brand hover:bg-brand-dark text-white text-sm font-medium py-2 transition-colors">
+          Guardar cambios
+        </button>
+      </form>
+    </div>
+  )
+}
+
+function Campo({
+  label,
+  name,
+  type = 'text',
+  required = false,
+  step,
+  defaultValue,
+}: {
+  label: string
+  name: string
+  type?: string
+  required?: boolean
+  step?: string
+  defaultValue?: string
+}) {
+  return (
+    <div>
+      <label htmlFor={name} className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
+      <input
+        id={name}
+        name={name}
+        type={type}
+        step={step}
+        required={required}
+        defaultValue={defaultValue}
+        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+      />
     </div>
   )
 }
