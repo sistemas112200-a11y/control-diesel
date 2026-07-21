@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getVehiculos } from '@/repositories/vehiculo.repository'
+import { cambiarEstadoVehiculoAction } from './actions'
 
 const ESTADO_LABEL: Record<string, string> = {
   activo: 'Activo',
@@ -90,6 +91,13 @@ export default async function VehiculosPage({
                       <Link href={`/vehiculos/${v.id}/qr`} className="text-xs font-medium text-brand-dark hover:underline">
                         Ver QR
                       </Link>
+                      <form action={cambiarEstadoVehiculoAction}>
+                        <input type="hidden" name="id" value={v.id} />
+                        <input type="hidden" name="nuevo_estado" value={v.estado === 'activo' ? 'baja' : 'activo'} />
+                        <button type="submit" className="text-xs font-medium text-brand-dark hover:underline">
+                          {v.estado === 'activo' ? 'Desactivar' : 'Activar'}
+                        </button>
+                      </form>
                     </div>
                   </td>
                 </tr>

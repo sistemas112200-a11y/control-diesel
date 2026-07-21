@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { getVehiculos } from '@/repositories/vehiculo.repository'
+import { getVehiculos, getVehiculoById } from '@/repositories/vehiculo.repository'
 import { crearCargaAction } from './actions'
 
 export default async function NuevaCargaPage({
@@ -9,7 +9,31 @@ export default async function NuevaCargaPage({
 }) {
   const { vehiculo_id } = await searchParams
   const supabase = await createClient()
-  const vehiculos = await getVehiculos(supabase)
+
+  if (vehiculo_id) {
+    let vehiculoEscaneado = null
+    try {
+      vehiculoEscaneado = await getVehiculoById(supabase, vehiculo_id)
+    } catch {
+      vehiculoEscaneado = null
+    }
+
+    if (vehiculoEscaneado && vehiculoEscaneado.estado !== 'activo') {
+      return (
+        <div className="max-w-md mx-auto text-center space-y-4 py-16">
+          <div className="text-6xl">🚫</div>
+          <h1 className="text-2xl font-bold text-red-600">UNIDAD DESACTIVADA</h1>
+          <p className="text-lg text-slate-700">
+            La unidad <span className="font-semibold">{vehiculoEscaneado.numero_economico}</span> no está activa en este momento.
+          </p>
+          <p className="text-slate-600">Contacta al personal a cargo antes de continuar.</p>
+        </div>
+      )
+    }
+  }
+
+  const todosLosVehiculos = await getVehiculos(supabase)
+  const vehiculos = todosLosVehiculos.filter((v) => v.estado === 'activo')
 
   const { data: operadores } = await supabase
     .from('operadores')
