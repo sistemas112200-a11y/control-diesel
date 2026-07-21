@@ -1,43 +1,83 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { puedeVer, type ModuloVista } from '@/lib/auth/permissions'
 import type { RolUsuario } from '@/lib/supabase/types'
 
-const ITEMS_PRINCIPALES: { href: string; label: string; modulo: ModuloVista }[] = [
+type Item = { href: string; label: string; modulo: ModuloVista }
+
+const ITEMS_PRINCIPALES: Item[] = [
   { href: '/dashboard', label: 'Dashboard', modulo: 'dashboard' },
+]
+
+const ITEMS_ALTAS: Item[] = [
   { href: '/vehiculos', label: 'Flota', modulo: 'vehiculos' },
   { href: '/operadores', label: 'Operadores', modulo: 'operadores' },
 ]
 
-const ITEMS_DIESEL: { href: string; label: string; modulo: ModuloVista }[] = [
+const ITEMS_DIESEL: Item[] = [
   { href: '/cargas', label: 'Cargas', modulo: 'cargas' },
   { href: '/reportes', label: 'Reportes', modulo: 'reportes' },
   { href: '/alertas', label: 'Alertas', modulo: 'alertas' },
 ]
 
-const ITEMS_FINALES: { href: string; label: string; modulo: ModuloVista }[] = [
+const ITEMS_FINALES: Item[] = [
   { href: '/usuarios', label: 'Usuarios', modulo: 'usuarios' },
   { href: '/configuracion', label: 'Configuración', modulo: 'configuracion' },
 ]
+
+function Grupo({
+  titulo,
+  items,
+  pathname,
+  renderLink,
+}: {
+  titulo: string
+  items: Item[]
+  pathname: string
+  renderLink: (item: Item) => ReactNode
+}) {
+  const activo = items.some((item) => pathname.startsWith(item.href))
+  const [abierto, setAbierto] = useState(activo)
+
+  useEffect(() => {
+    if (activo) setAbierto(true)
+  }, [activo])
+
+  if (items.length === 0) return null
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setAbierto((v) => !v)}
+        className={`w-full flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors ${
+          activo ? 'text-white font-medium' : 'text-slate-300 hover:bg-sidebar-hover hover:text-white'
+        }`}
+      >
+        <span>{titulo}</span>
+        <span className={`text-xs transition-transform ${abierto ? 'rotate-90' : ''}`}>›</span>
+      </button>
+      {abierto && (
+        <div className="ml-3 mt-1 space-y-1 border-l border-sidebar-hover pl-2">
+          {items.map(renderLink)}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export function Sidebar({ rol }: { rol: RolUsuario }) {
   const pathname = usePathname()
 
   const itemsPrincipales = ITEMS_PRINCIPALES.filter((item) => puedeVer(rol, item.modulo))
+  const itemsAltas = ITEMS_ALTAS.filter((item) => puedeVer(rol, item.modulo))
   const itemsDiesel = ITEMS_DIESEL.filter((item) => puedeVer(rol, item.modulo))
   const itemsFinales = ITEMS_FINALES.filter((item) => puedeVer(rol, item.modulo))
 
-  const dieselActivo = itemsDiesel.some((item) => pathname.startsWith(item.href))
-  const [abierto, setAbierto] = useState(dieselActivo)
-
-  useEffect(() => {
-    if (dieselActivo) setAbierto(true)
-  }, [dieselActivo])
-
-  function renderLink(item: { href: string; label: string }) {
+  function renderLink(item: Item) {
     const activo = pathname.startsWith(item.href)
     return (
       <Link
@@ -61,27 +101,8 @@ export function Sidebar({ rol }: { rol: RolUsuario }) {
       </div>
       <nav className="flex-1 px-2 space-y-1">
         {itemsPrincipales.map(renderLink)}
-
-        {itemsDiesel.length > 0 && (
-          <div>
-            <button
-              type="button"
-              onClick={() => setAbierto((v) => !v)}
-              className={`w-full flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors ${
-                dieselActivo ? 'text-white font-medium' : 'text-slate-300 hover:bg-sidebar-hover hover:text-white'
-              }`}
-            >
-              <span>Diésel</span>
-              <span className={`text-xs transition-transform ${abierto ? 'rotate-90' : ''}`}>›</span>
-            </button>
-            {abierto && (
-              <div className="ml-3 mt-1 space-y-1 border-l border-sidebar-hover pl-2">
-                {itemsDiesel.map(renderLink)}
-              </div>
-            )}
-          </div>
-        )}
-
+        <Grupo titulo="Altas" items={itemsAltas} pathname={pathname} renderLink={renderLink} />
+        <Grupo titulo="Diésel" items={itemsDiesel} pathname={pathname} renderLink={renderLink} />
         {itemsFinales.map(renderLink)}
       </nav>
     </aside>
