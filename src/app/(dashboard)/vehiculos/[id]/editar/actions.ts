@@ -32,6 +32,12 @@ export async function actualizarVehiculoAction(formData: FormData) {
       throw new Error('El rendimiento esperado debe ser mayor a cero')
     }
 
+    const intervaloRaw = formData.get('intervalo_mantenimiento_km')
+    const intervalo = intervaloRaw ? Number(intervaloRaw) : null
+    if (intervalo != null && intervalo <= 0) {
+      throw new Error('El intervalo de mantenimiento debe ser mayor a cero')
+    }
+
     const supabase = await createClient()
     await actualizarVehiculo(supabase, id, {
       numero_economico: formData.get('numero_economico') as string,
@@ -42,6 +48,12 @@ export async function actualizarVehiculoAction(formData: FormData) {
       capacidad_tanque1_litros: capacidad,
       rendimiento_esperado_km_l: rendimiento,
     })
+
+    const { error } = await supabase
+      .from('vehiculos')
+      .update({ intervalo_mantenimiento_km: intervalo })
+      .eq('id', id)
+    if (error) throw error
   } catch (error) {
     const mensaje = error instanceof Error ? error.message : 'No se pudo guardar el vehículo, revisa los datos.'
     redirect(`/vehiculos/${id}/editar?error=${encodeURIComponent(mensaje)}`)

@@ -78,9 +78,48 @@ export const reglaTicketRepetido: ReglaAlerta = {
   },
 }
 
+export const reglaMantenimientoVencido: ReglaAlerta = {
+  async evaluar({ supabase, carga, vehiculo }) {
+    if (!vehiculo.intervalo_mantenimiento_km) return null
+
+    const { data: ultimoMantenimiento } = await supabase
+      .from('mantenimientos')
+      .select('kilometraje')
+      .eq('vehiculo_id', vehiculo.id)
+      .is('deleted_at', null)
+      .order('fecha', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (!ultimoMantenimiento) return null
+
+    const kmDesdeUltimoServicio = carga.kilometraje - ultimoMantenimiento.kilometraje
+    if (kmDesdeUltimoServicio < vehiculo.intervalo_mantenimiento_km) return null
+
+    const { data: alertaExistente } = await supabase
+      .from('alertas')
+      .select('id')
+      .eq('vehiculo_id', vehiculo.id)
+      .eq('tipo', 'mantenimiento_vencido')
+      .eq('estado', 'nueva')
+      .limit(1)
+      .maybeSingle()
+
+    if (alertaExistente) return null
+
+    return {
+      tipo: 'mantenimiento_vencido',
+      severidad: 'advertencia',
+      descripcion: `La unidad lleva ${kmDesdeUltimoServicio.toFixed(0)} km desde el último mantenimiento (cada ${vehiculo.intervalo_mantenimiento_km} km)`,
+    }
+  },
+}
+
 export const reglasDeCarga: ReglaAlerta[] = [
   reglaRendimientoBajo,
   reglaLitrosFueraRango,
   reglaCargaDuplicada,
   reglaTicketRepetido,
+  reglaMantenimientoVencido,
 ]

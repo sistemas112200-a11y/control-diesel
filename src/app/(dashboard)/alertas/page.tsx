@@ -11,6 +11,7 @@ const TIPO_LABEL: Record<string, string> = {
   sin_movimiento: 'Sin movimiento',
   ticket_repetido: 'Ticket repetido',
   posible_robo: 'Posible robo',
+  mantenimiento_vencido: 'Mantenimiento vencido',
 }
 
 const SEVERIDAD_COLOR: Record<string, string> = {

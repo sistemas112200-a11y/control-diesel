@@ -5,8 +5,10 @@ export type MetodoPago = 'efectivo' | 'tarjeta_empresa' | 'transferencia' | 'cre
 export type TipoAlerta =
   | 'rendimiento_bajo' | 'carga_duplicada' | 'litros_fuera_rango'
   | 'consumo_excesivo' | 'sin_movimiento' | 'ticket_repetido' | 'posible_robo'
+  | 'mantenimiento_vencido'
 export type SeveridadAlerta = 'info' | 'advertencia' | 'critica'
 export type EstadoAlerta = 'nueva' | 'revisada' | 'descartada'
+export type TipoMantenimiento = 'preventivo' | 'correctivo'
 
 export interface Empresa {
   id: string
@@ -62,6 +64,7 @@ export interface Vehiculo {
   estado: EstadoVehiculo
   foto_url: string | null
   km_actual: number
+  intervalo_mantenimiento_km: number | null
   created_at: string
   updated_at: string
   deleted_at: string | null
@@ -162,4 +165,18 @@ export interface Alerta {
   responsable_id: string | null
   created_at: string
   updated_at: string
+}
+
+export interface Mantenimiento {
+  id: string
+  terminal_id: string
+  vehiculo_id: string
+  tipo: TipoMantenimiento
+  descripcion: string
+  kilometraje: number
+  fecha: string
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
 }
