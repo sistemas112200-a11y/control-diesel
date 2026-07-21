@@ -1,9 +1,17 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCargaById } from '@/repositories/carga.repository'
+import { getUsuarioActual } from '@/lib/auth/session'
+import { puedeVerDetalleCargas } from '@/lib/auth/permissions'
 
 export default async function DetalleCargaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+
+  const usuarioActual = await getUsuarioActual()
+  if (!usuarioActual || !puedeVerDetalleCargas(usuarioActual.rol)) {
+    redirect('/cargas')
+  }
+
   const supabase = await createClient()
 
   let carga

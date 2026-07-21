@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getCargas } from '@/repositories/carga.repository'
+import { getUsuarioActual } from '@/lib/auth/session'
+import { puedeVerDetalleCargas } from '@/lib/auth/permissions'
 
 export default async function CargasPage({
   searchParams,
@@ -10,6 +12,8 @@ export default async function CargasPage({
   const { alerta, q } = await searchParams
   const supabase = await createClient()
   const todasLasCargas = await getCargas(supabase)
+  const usuarioActual = await getUsuarioActual()
+  const mostrarDetalle = usuarioActual ? puedeVerDetalleCargas(usuarioActual.rol) : false
 
   const cargas = q
     ? todasLasCargas.filter((c) => {
@@ -58,13 +62,13 @@ export default async function CargasPage({
               <th className="text-left px-4 py-3">Litros</th>
               <th className="text-left px-4 py-3">Total</th>
               <th className="text-left px-4 py-3">Rendimiento</th>
-              <th className="text-left px-4 py-3">Detalle</th>
+              {mostrarDetalle && <th className="text-left px-4 py-3">Detalle</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {cargas.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={mostrarDetalle ? 7 : 6} className="px-4 py-8 text-center text-slate-500">
                   {q ? `No se encontraron cargas para "${q}".` : 'Aún no hay cargas registradas.'}
                 </td>
               </tr>
@@ -77,11 +81,13 @@ export default async function CargasPage({
                   <td className="px-4 py-3 text-slate-600">{c.litros_cargados} L</td>
                   <td className="px-4 py-3 text-slate-600">${c.total_pagado.toFixed(2)}</td>
                   <td className="px-4 py-3 text-slate-600">{c.rendimiento_km_l ? `${c.rendimiento_km_l.toFixed(2)} km/L` : '—'}</td>
-                  <td className="px-4 py-3">
-                    <Link href={`/cargas/${c.id}`} className="text-brand-dark hover:underline font-medium">
-                      Ver fotos
-                    </Link>
-                  </td>
+                  {mostrarDetalle && (
+                    <td className="px-4 py-3">
+                      <Link href={`/cargas/${c.id}`} className="text-brand-dark hover:underline font-medium">
+                        Ver fotos
+                      </Link>
+                    </td>
+                  )}
                 </tr>
               ))
             )}

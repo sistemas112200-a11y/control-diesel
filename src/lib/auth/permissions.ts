@@ -71,3 +71,11 @@ const VISTA_POR_ROL: Record<ModuloVista, RolUsuario[]> = {
 export function puedeVer(rol: RolUsuario, modulo: ModuloVista): boolean {
   return VISTA_POR_ROL[modulo]?.includes(rol) ?? false
 }
+
+// --- Detalle de una carga (fotos, folio, observaciones) ---
+
+const DETALLE_CARGAS_ROLES: RolUsuario[] = ['administrador', 'supervisor', 'capturista', 'contabilidad', 'auditor']
+
+export function puedeVerDetalleCargas(rol: RolUsuario): boolean {
+  return DETALLE_CARGAS_ROLES.includes(rol)
+}
