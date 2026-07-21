@@ -44,3 +44,30 @@ const PERMISOS: Record<Modulo, Record<Accion, RolUsuario[]>> = {
 export function puede(rol: RolUsuario, modulo: Modulo, accion: Accion): boolean {
   return PERMISOS[modulo][accion].includes(rol)
 }
+
+// --- Qué puede VER cada rol (menú y acceso directo a la pantalla) ---
+
+export type ModuloVista =
+  | 'dashboard'
+  | 'vehiculos'
+  | 'operadores'
+  | 'cargas'
+  | 'alertas'
+  | 'reportes'
+  | 'usuarios'
+  | 'configuracion'
+
+const VISTA_POR_ROL: Record<ModuloVista, RolUsuario[]> = {
+  dashboard: ['administrador', 'supervisor', 'contabilidad', 'auditor'],
+  vehiculos: ['administrador', 'supervisor', 'capturista', 'auditor'],
+  operadores: ['administrador', 'supervisor', 'auditor'],
+  cargas: ['administrador', 'supervisor', 'capturista', 'operador', 'contabilidad', 'auditor'],
+  alertas: ['administrador', 'supervisor', 'auditor'],
+  reportes: ['administrador', 'supervisor', 'contabilidad', 'auditor'],
+  usuarios: ['administrador'],
+  configuracion: ['administrador'],
+}
+
+export function puedeVer(rol: RolUsuario, modulo: ModuloVista): boolean {
+  return VISTA_POR_ROL[modulo]?.includes(rol) ?? false
+}

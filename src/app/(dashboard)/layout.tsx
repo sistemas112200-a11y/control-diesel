@@ -15,6 +15,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .eq('id', user.id)
     .single()
 
+  if (!perfil) redirect('/login')
+
   const { data: terminal } = await supabase
     .from('usuario_terminales')
     .select('terminales(nombre)')
@@ -24,11 +26,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="flex">
-      <Sidebar />
+      <Sidebar rol={perfil.rol} />
       <div className="flex-1 min-h-screen">
         <Header
-          nombreCompleto={perfil?.nombre_completo ?? user.email ?? ''}
-          rol={perfil?.rol ?? ''}
+          nombreCompleto={perfil.nombre_completo ?? user.email ?? ''}
+          rol={perfil.rol ?? ''}
           terminalNombre={(terminal?.terminales as any)?.nombre ?? 'Todas las terminales'}
         />
         <main className="p-6">{children}</main>
