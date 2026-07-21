@@ -35,20 +35,12 @@ export default async function EditarVehiculoPage({
           <p className="text-xs text-slate-500">
             Al escanearlo se abre "Nueva carga" con esta unidad ya seleccionada.
           </p>
-          <div className="flex gap-4">
-            <Link
-              href={`/vehiculos/${vehiculo.id}/qr`}
-              className="inline-block text-xs font-medium text-brand-dark hover:underline"
-            >
-              Ver en grande / Imprimir
-            </Link>
-            <Link
-              href={`/vehiculos/${vehiculo.id}/mantenimiento`}
-              className="inline-block text-xs font-medium text-brand-dark hover:underline"
-            >
-              Ver mantenimiento
-            </Link>
-          </div>
+          <Link
+            href={`/vehiculos/${vehiculo.id}/qr`}
+            className="inline-block text-xs font-medium text-brand-dark hover:underline"
+          >
+            Ver en grande / Imprimir
+          </Link>
         </div>
       </div>
 

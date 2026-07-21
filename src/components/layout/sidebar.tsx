@@ -15,6 +15,7 @@ const ITEMS_PRINCIPALES: Item[] = [
 const ITEMS_ALTAS: Item[] = [
   { href: '/vehiculos', label: 'Flota', modulo: 'vehiculos' },
   { href: '/operadores', label: 'Operadores', modulo: 'operadores' },
+  { href: '/mantenimientos', label: 'Mantenimientos', modulo: 'mantenimientos' },
 ]
 
 const ITEMS_DIESEL: Item[] = [
