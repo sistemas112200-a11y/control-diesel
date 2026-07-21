@@ -17,9 +17,9 @@ const ESTADO_COLOR: Record<string, string> = {
 export default async function VehiculosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>
+  searchParams: Promise<{ q?: string; ok?: string }>
 }) {
-  const { q } = await searchParams
+  const { q, ok } = await searchParams
   const supabase = await createClient()
   const vehiculos = await getVehiculos(supabase, undefined, q)
 
@@ -34,6 +34,12 @@ export default async function VehiculosPage({
           + Nuevo vehículo
         </Link>
       </div>
+
+      {ok === 'vehiculo' && (
+        <div className="rounded-md bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3">
+          Vehículo actualizado correctamente.
+        </div>
+      )}
 
       <form>
         <input
@@ -77,9 +83,14 @@ export default async function VehiculosPage({
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <Link href={`/vehiculos/${v.id}/qr`} className="text-xs font-medium text-brand-dark hover:underline">
-                      Ver QR
-                    </Link>
+                    <div className="flex items-center gap-3">
+                      <Link href={`/vehiculos/${v.id}/editar`} className="text-xs font-medium text-brand-dark hover:underline">
+                        Editar
+                      </Link>
+                      <Link href={`/vehiculos/${v.id}/qr`} className="text-xs font-medium text-brand-dark hover:underline">
+                        Ver QR
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))

@@ -1,3 +1,5 @@
+import Link from 'next/link'
+import QRCode from 'qrcode'
 import { createClient } from '@/lib/supabase/server'
 import { getVehiculoById } from '@/repositories/vehiculo.repository'
 import { actualizarVehiculoAction } from './actions'
@@ -14,6 +16,10 @@ export default async function EditarVehiculoPage({
   const supabase = await createClient()
   const vehiculo = await getVehiculoById(supabase, id)
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+  const urlCarga = `${baseUrl}/cargas/nuevo?vehiculo_id=${vehiculo.id}`
+  const qrDataUrl = await QRCode.toDataURL(urlCarga, { width: 300, margin: 1 })
+
   return (
     <div className="max-w-xl space-y-6">
       <h1 className="text-lg font-semibold text-slate-900">Editar vehículo</h1>
@@ -21,6 +27,22 @@ export default async function EditarVehiculoPage({
       {error && (
         <div className="rounded-md bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3">{error}</div>
       )}
+
+      <div className="bg-white rounded-xl border border-slate-200 p-6 flex items-center gap-6">
+        <img src={qrDataUrl} alt={`QR de la unidad ${vehiculo.numero_economico}`} className="w-32 h-32 shrink-0" />
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-slate-900">Código QR — {vehiculo.numero_economico}</p>
+          <p className="text-xs text-slate-500">
+            Al escanearlo se abre "Nueva carga" con esta unidad ya seleccionada.
+          </p>
+          <Link
+            href={`/vehiculos/${vehiculo.id}/qr`}
+            className="inline-block text-xs font-medium text-brand-dark hover:underline"
+          >
+            Ver en grande / Imprimir
+          </Link>
+        </div>
+      </div>
 
       <form action={actualizarVehiculoAction} className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
         <input type="hidden" name="id" value={vehiculo.id} />
