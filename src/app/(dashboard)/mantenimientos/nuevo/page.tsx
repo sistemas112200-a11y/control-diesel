@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getVehiculos } from '@/repositories/vehiculo.repository'
+import { BuscadorUnidad } from '@/components/ui/buscador-unidad'
 import { crearMantenimientoAction } from './actions'
 
 export default async function NuevoMantenimientoPage({
@@ -23,12 +24,10 @@ export default async function NuevoMantenimientoPage({
       <form action={crearMantenimientoAction} className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">Unidad</label>
-          <select name="vehiculo_id" required className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-            <option value="">Selecciona...</option>
-            {vehiculos.map((v) => (
-              <option key={v.id} value={v.id}>{v.numero_economico}</option>
-            ))}
-          </select>
+          <BuscadorUnidad
+            name="vehiculo_id"
+            opciones={vehiculos.map((v) => ({ id: v.id, label: v.numero_economico }))}
+          />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
