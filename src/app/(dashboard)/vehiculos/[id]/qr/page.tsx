@@ -1,103 +1,32 @@
-import Link from 'next/link'
+import QRCode from 'qrcode'
 import { createClient } from '@/lib/supabase/server'
-import { getVehiculos } from '@/repositories/vehiculo.repository'
+import { getVehiculoById } from '@/repositories/vehiculo.repository'
+import { BotonImprimir } from '@/components/vehiculos/boton-imprimir'
 
-const ESTADO_LABEL: Record<string, string> = {
-  activo: 'Activo',
-  taller: 'En taller',
-  baja: 'Baja',
-}
-
-const ESTADO_COLOR: Record<string, string> = {
-  activo: 'bg-green-100 text-green-700',
-  taller: 'bg-amber-100 text-amber-700',
-  baja: 'bg-red-100 text-red-700',
-}
-
-export default async function VehiculosPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ q?: string; ok?: string }>
-}) {
-  const { q, ok } = await searchParams
+export default async function QRVehiculoPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createClient()
-  const vehiculos = await getVehiculos(supabase, undefined, q)
+  const vehiculo = await getVehiculoById(supabase, id)
+
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+  const url = `${baseUrl}/cargas/nuevo?vehiculo_id=${vehiculo.id}`
+  const qrDataUrl = await QRCode.toDataURL(url, { width: 400, margin: 1 })
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-slate-900">Flota</h1>
-        <Link
-          href="/vehiculos/nuevo"
-          className="rounded-md bg-brand hover:bg-brand-dark text-white text-sm font-medium px-4 py-2 transition-colors"
-        >
-          + Nuevo vehículo
-        </Link>
+    <div className="max-w-md mx-auto space-y-6 text-center">
+      <div className="print:hidden">
+        <h1 className="text-lg font-semibold text-slate-900">Código QR — {vehiculo.numero_economico}</h1>
+        <p className="text-sm text-slate-500 mt-1">
+          Imprime y pega este código en la unidad. Al escanearlo desde el celular, se abre el formulario de carga con la unidad ya seleccionada.
+        </p>
       </div>
 
-      {ok === 'vehiculo' && (
-        <div className="rounded-md bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3">
-          Vehículo actualizado correctamente.
-        </div>
-      )}
-
-      <form>
-        <input
-          type="text"
-          name="q"
-          defaultValue={q ?? ''}
-          placeholder="Buscar por número económico, placas o marca..."
-          className="w-full max-w-sm rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-        />
-      </form>
-
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-500 text-xs uppercase">
-            <tr>
-              <th className="text-left px-4 py-3">Número económico</th>
-              <th className="text-left px-4 py-3">Placas</th>
-              <th className="text-left px-4 py-3">Marca / Modelo</th>
-              <th className="text-left px-4 py-3">Rendimiento esperado</th>
-              <th className="text-left px-4 py-3">Estado</th>
-              <th className="text-left px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {vehiculos.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
-                  {q ? `No se encontraron vehículos para "${q}".` : 'Aún no hay vehículos registrados.'}
-                </td>
-              </tr>
-            ) : (
-              vehiculos.map((v) => (
-                <tr key={v.id}>
-                  <td className="px-4 py-3 font-medium text-slate-900">{v.numero_economico}</td>
-                  <td className="px-4 py-3 text-slate-600">{v.placas ?? '—'}</td>
-                  <td className="px-4 py-3 text-slate-600">{v.marca} {v.modelo}</td>
-                  <td className="px-4 py-3 text-slate-600">{v.rendimiento_esperado_km_l} km/L</td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-1 text-xs font-medium ${ESTADO_COLOR[v.estado]}`}>
-                      {ESTADO_LABEL[v.estado]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <Link href={`/vehiculos/${v.id}/editar`} className="text-xs font-medium text-brand-dark hover:underline">
-                        Editar
-                      </Link>
-                      <Link href={`/vehiculos/${v.id}/qr`} className="text-xs font-medium text-brand-dark hover:underline">
-                        Ver QR
-                      </Link>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+      <div className="bg-white rounded-xl border border-slate-200 p-8 flex flex-col items-center gap-4">
+        <img src={qrDataUrl} alt={`QR de la unidad ${vehiculo.numero_economico}`} className="w-64 h-64" />
+        <p className="text-xl font-bold text-slate-900">{vehiculo.numero_economico}</p>
       </div>
+
+      <BotonImprimir />
     </div>
   )
 }
