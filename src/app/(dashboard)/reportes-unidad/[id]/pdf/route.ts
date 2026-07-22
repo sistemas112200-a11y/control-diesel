@@ -74,7 +74,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     ['Operador que reporta', reporte.operadores?.nombre_completo ?? '—'],
     ['Fecha del reporte', new Date(reporte.created_at).toLocaleString('es-MX')],
   ]
-  const altoCaja = 26
+  const altoCaja = 32
   doc.setFillColor(...GRIS_CLARO)
   doc.roundedRect(margen, y, anchoUtil, altoCaja, 3, 3, 'F')
   const colAncho = anchoUtil / 2
@@ -82,7 +82,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const col = i % 2
     const fila = Math.floor(i / 2)
     const x = margen + 6 + col * colAncho
-    const yFila = y + 9 + fila * 13
+    const yFila = y + 7 + fila * 14
     doc.setFontSize(7.5)
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(...GRIS_TEXTO)
