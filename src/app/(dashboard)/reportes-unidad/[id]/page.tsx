@@ -39,6 +39,9 @@ export default async function ReporteDetallePage({
         <h1 className="text-lg font-semibold text-slate-900 mt-1">
           {reporte.vehiculos?.numero_economico ?? '—'}
         </h1>
+        {reporte.operadores?.nombre_completo && (
+          <p className="text-sm text-slate-500">Reportado por: {reporte.operadores.nombre_completo}</p>
+        )}
       </div>
 
       {error && (

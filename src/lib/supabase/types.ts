@@ -188,6 +188,7 @@ export interface ReporteUnidad {
   id: string
   terminal_id: string
   vehiculo_id: string
+  operador_id: string | null
   descripcion: string
   estado: EstadoReporte
   tomado_por: string | null

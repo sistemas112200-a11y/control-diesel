@@ -11,12 +11,15 @@ import { puede } from '@/lib/auth/permissions'
 export async function crearReporteAction(formData: FormData) {
   const usuario = await getUsuarioActual()
   if (!usuario || !puede(usuario.rol, 'reportes_unidad', 'crear')) {
-    throw new Error('No tienes permiso para reportar problemas')
+    throw new Error('No tienes permiso para crear reportes')
   }
 
-  const vehiculoId = formData.get('vehiculo_id') as string
-
   try {
+    const vehiculoId = formData.get('vehiculo_id') as string
+    if (!vehiculoId) {
+      throw new Error('Selecciona una unidad')
+    }
+
     const operadorId = formData.get('operador_id') as string
     if (!operadorId) {
       throw new Error('Selecciona el operador que reporta')
@@ -38,10 +41,10 @@ export async function crearReporteAction(formData: FormData) {
       created_by: usuario.id,
     })
   } catch (error) {
-    const mensaje = error instanceof Error ? error.message : 'No se pudo enviar el reporte.'
-    redirect(`/unidad/${vehiculoId}/reporte?error=${encodeURIComponent(mensaje)}`)
+    const mensaje = error instanceof Error ? error.message : 'No se pudo guardar el reporte.'
+    redirect(`/reportes-unidad/nuevo?error=${encodeURIComponent(mensaje)}`)
   }
 
   revalidatePath('/reportes-unidad')
-  redirect(`/unidad/${vehiculoId}/reporte?ok=1`)
+  redirect('/reportes-unidad')
 }

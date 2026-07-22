@@ -20,7 +20,15 @@ export default async function ReportesUnidadPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-semibold text-slate-900">Reportes de unidad</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-lg font-semibold text-slate-900">Reportes de unidad</h1>
+        <Link
+          href="/reportes-unidad/nuevo"
+          className="rounded-md bg-brand hover:bg-brand-dark text-white text-sm font-medium px-4 py-2 transition-colors"
+        >
+          + Nuevo reporte
+        </Link>
+      </div>
 
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <table className="w-full text-sm">
@@ -28,6 +36,7 @@ export default async function ReportesUnidadPage() {
             <tr>
               <th className="text-left px-4 py-3">Fecha</th>
               <th className="text-left px-4 py-3">Unidad</th>
+              <th className="text-left px-4 py-3">Operador</th>
               <th className="text-left px-4 py-3">Descripción</th>
               <th className="text-left px-4 py-3">Estado</th>
               <th className="text-left px-4 py-3"></th>
@@ -36,7 +45,7 @@ export default async function ReportesUnidadPage() {
           <tbody className="divide-y divide-slate-100">
             {reportes.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
                   No hay reportes registrados.
                 </td>
               </tr>
@@ -45,6 +54,7 @@ export default async function ReportesUnidadPage() {
                 <tr key={r.id}>
                   <td className="px-4 py-3 text-slate-600">{new Date(r.created_at).toLocaleString('es-MX')}</td>
                   <td className="px-4 py-3 font-medium text-slate-900">{r.vehiculos?.numero_economico ?? '—'}</td>
+                  <td className="px-4 py-3 text-slate-600">{r.operadores?.nombre_completo ?? '—'}</td>
                   <td className="px-4 py-3 text-slate-600">{r.descripcion}</td>
                   <td className="px-4 py-3">
                     <span className={`rounded-full px-2 py-1 text-xs font-medium ${ESTADO_COLOR[r.estado]}`}>

@@ -4,29 +4,36 @@ import type { ReporteUnidad, RefaccionReporte } from '@/lib/supabase/types'
 export async function getReportes(supabase: SupabaseClient) {
   const { data, error } = await supabase
     .from('reportes_unidad')
-    .select('*, vehiculos(numero_economico)')
+    .select('*, vehiculos(numero_economico), operadores(nombre_completo)')
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
 
   if (error) throw error
-  return data as (ReporteUnidad & { vehiculos: { numero_economico: string } | null })[]
+  return data as (ReporteUnidad & {
+    vehiculos: { numero_economico: string } | null
+    operadores: { nombre_completo: string } | null
+  })[]
 }
 
 export async function getReporteById(supabase: SupabaseClient, id: string) {
   const { data, error } = await supabase
     .from('reportes_unidad')
-    .select('*, vehiculos(numero_economico)')
+    .select('*, vehiculos(numero_economico), operadores(nombre_completo)')
     .eq('id', id)
     .single()
 
   if (error) throw error
-  return data as ReporteUnidad & { vehiculos: { numero_economico: string } | null }
+  return data as ReporteUnidad & {
+    vehiculos: { numero_economico: string } | null
+    operadores: { nombre_completo: string } | null
+  }
 }
 
 export async function crearReporte(supabase: SupabaseClient, input: {
   terminal_id: string
   vehiculo_id: string
   descripcion: string
+  operador_id: string | null
   created_by: string
 }) {
   const { data, error } = await supabase
