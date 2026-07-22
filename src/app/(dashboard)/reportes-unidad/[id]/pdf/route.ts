@@ -53,3 +53,48 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
   if (reporte.solucion) {
     doc.fontSize(13).text('Falla reparada', { underline: true })
+    doc.fontSize(11).text(reporte.solucion)
+    doc.moveDown()
+  }
+
+  if (reporte.fecha_solucion) {
+    doc.fontSize(11).text(`Fecha de solución: ${new Date(reporte.fecha_solucion).toLocaleString('es-MX')}`)
+    doc.moveDown()
+  }
+
+  if (refacciones.length > 0) {
+    doc.fontSize(13).text('Refacciones utilizadas', { underline: true })
+    doc.moveDown(0.5)
+    refacciones.forEach((r) => {
+      doc.fontSize(11).text(
+        `${r.descripcion} — Cantidad: ${r.cantidad} — Costo: $${r.costo.toFixed(2)} — Subtotal: $${(r.cantidad * r.costo).toFixed(2)}`
+      )
+    })
+    doc.moveDown(0.5)
+    doc.fontSize(12).text(`Total refacciones: $${totalRefacciones.toFixed(2)}`, { align: 'right' })
+    doc.moveDown()
+  }
+
+  if (reporte.firma_url) {
+    try {
+      const base64Data = reporte.firma_url.split(',')[1]
+      const imagenBuffer = Buffer.from(base64Data, 'base64')
+      doc.fontSize(13).text('Firma del mecánico', { underline: true })
+      doc.moveDown(0.5)
+      doc.image(imagenBuffer, { width: 200 })
+    } catch {
+      doc.fontSize(11).text('(No se pudo incluir la firma)')
+    }
+  }
+
+  doc.end()
+  const pdfBuffer = await pdfListo
+
+  return new NextResponse(new Blob([pdfBuffer], { type: 'application/pdf' }), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${reporte.folio}.pdf"`,
+    },
+  })
+}
