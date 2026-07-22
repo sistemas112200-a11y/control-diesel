@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import PDFDocument from 'pdfkit'
+import { jsPDF } from 'jspdf'
 import { createClient } from '@/lib/supabase/server'
 import { getReporteById, getRefaccionesPorReporte } from '@/repositories/reporte.repository'
 import { getUsuarioActual } from '@/lib/auth/session'
@@ -22,75 +22,90 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const refacciones = await getRefaccionesPorReporte(supabase, id)
   const totalRefacciones = refacciones.reduce((suma, r) => suma + r.cantidad * r.costo, 0)
 
-  const doc = new PDFDocument({ margin: 50 })
-  const chunks: Buffer[] = []
-  doc.on('data', (chunk) => chunks.push(chunk))
+  const doc = new jsPDF()
+  const margenIzquierdo = 20
+  const anchoUtil = 170
+  let y = 20
 
-  const pdfListo = new Promise<Buffer>((resolve) => {
-    doc.on('end', () => resolve(Buffer.concat(chunks)))
-  })
+  doc.setFontSize(18)
+  doc.text('Reporte de unidad', 105, y, { align: 'center' })
+  y += 12
 
-  doc.fontSize(18).text('Reporte de unidad', { align: 'center' })
-  doc.moveDown()
+  doc.setFontSize(11)
+  doc.text(`Folio: ${reporte.folio}`, margenIzquierdo, y); y += 7
+  doc.text(`Unidad: ${reporte.vehiculos?.numero_economico ?? '—'}`, margenIzquierdo, y); y += 7
+  doc.text(`Operador que reporta: ${reporte.operadores?.nombre_completo ?? '—'}`, margenIzquierdo, y); y += 7
+  doc.text(`Fecha del reporte: ${new Date(reporte.created_at).toLocaleString('es-MX')}`, margenIzquierdo, y); y += 7
+  doc.text(`Estado: ${ESTADO_LABEL[reporte.estado]}`, margenIzquierdo, y); y += 10
 
-  doc.fontSize(12)
-  doc.text(`Folio: ${reporte.folio}`)
-  doc.text(`Unidad: ${reporte.vehiculos?.numero_economico ?? '—'}`)
-  doc.text(`Operador que reporta: ${reporte.operadores?.nombre_completo ?? '—'}`)
-  doc.text(`Fecha del reporte: ${new Date(reporte.created_at).toLocaleString('es-MX')}`)
-  doc.text(`Estado: ${ESTADO_LABEL[reporte.estado]}`)
-  doc.moveDown()
+  function seccion(titulo: string, texto: string) {
+    doc.setFontSize(13)
+    doc.setFont('helvetica', 'bold')
+    doc.text(titulo, margenIzquierdo, y)
+    y += 7
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'normal')
+    const lineas = doc.splitTextToSize(texto, anchoUtil)
+    doc.text(lineas, margenIzquierdo, y)
+    y += lineas.length * 6 + 6
+  }
 
-  doc.fontSize(13).text('Problema reportado', { underline: true })
-  doc.fontSize(11).text(reporte.descripcion)
-  doc.moveDown()
+  seccion('Problema reportado', reporte.descripcion)
 
   if (reporte.posible_falla) {
-    doc.fontSize(13).text('Posible falla', { underline: true })
-    doc.fontSize(11).text(reporte.posible_falla)
-    doc.moveDown()
+    seccion('Posible falla', reporte.posible_falla)
   }
 
   if (reporte.solucion) {
-    doc.fontSize(13).text('Falla reparada', { underline: true })
-    doc.fontSize(11).text(reporte.solucion)
-    doc.moveDown()
+    seccion('Falla reparada', reporte.solucion)
   }
 
   if (reporte.fecha_solucion) {
-    doc.fontSize(11).text(`Fecha de solución: ${new Date(reporte.fecha_solucion).toLocaleString('es-MX')}`)
-    doc.moveDown()
+    doc.setFontSize(11)
+    doc.text(`Fecha de solución: ${new Date(reporte.fecha_solucion).toLocaleString('es-MX')}`, margenIzquierdo, y)
+    y += 10
   }
 
   if (refacciones.length > 0) {
-    doc.fontSize(13).text('Refacciones utilizadas', { underline: true })
-    doc.moveDown(0.5)
+    doc.setFontSize(13)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Refacciones utilizadas', margenIzquierdo, y)
+    y += 7
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
     refacciones.forEach((r) => {
-      doc.fontSize(11).text(
-        `${r.descripcion} — Cantidad: ${r.cantidad} — Costo: $${r.costo.toFixed(2)} — Subtotal: $${(r.cantidad * r.costo).toFixed(2)}`
+      doc.text(
+        `${r.descripcion} — Cantidad: ${r.cantidad} — Costo: $${r.costo.toFixed(2)} — Subtotal: $${(r.cantidad * r.costo).toFixed(2)}`,
+        margenIzquierdo,
+        y
       )
+      y += 6
     })
-    doc.moveDown(0.5)
-    doc.fontSize(12).text(`Total refacciones: $${totalRefacciones.toFixed(2)}`, { align: 'right' })
-    doc.moveDown()
+    y += 2
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'bold')
+    doc.text(`Total refacciones: $${totalRefacciones.toFixed(2)}`, margenIzquierdo + anchoUtil, y, { align: 'right' })
+    doc.setFont('helvetica', 'normal')
+    y += 12
   }
 
   if (reporte.firma_url) {
+    doc.setFontSize(13)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Firma del mecánico', margenIzquierdo, y)
+    y += 5
+    doc.setFont('helvetica', 'normal')
     try {
-      const base64Data = reporte.firma_url.split(',')[1]
-      const imagenBuffer = Buffer.from(base64Data, 'base64')
-      doc.fontSize(13).text('Firma del mecánico', { underline: true })
-      doc.moveDown(0.5)
-      doc.image(imagenBuffer, { width: 200 })
+      doc.addImage(reporte.firma_url, 'PNG', margenIzquierdo, y, 60, 25)
     } catch {
-      doc.fontSize(11).text('(No se pudo incluir la firma)')
+      doc.setFontSize(11)
+      doc.text('(No se pudo incluir la firma)', margenIzquierdo, y + 5)
     }
   }
 
-  doc.end()
-  const pdfBuffer = await pdfListo
+  const pdfArrayBuffer = doc.output('arraybuffer')
 
-  return new NextResponse(pdfBuffer as unknown as BodyInit, {
+  return new NextResponse(pdfArrayBuffer, {
     status: 200,
     headers: {
       'Content-Type': 'application/pdf',
