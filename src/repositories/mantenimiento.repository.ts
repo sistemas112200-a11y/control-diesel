@@ -44,7 +44,8 @@ export async function crearMantenimiento(supabase: SupabaseClient, input: {
   tipo: TipoMantenimiento
   descripcion: string
   kilometraje: number
-  fecha: string
+  intervalo_km: number | null
+  intervalo_dias: number | null
   created_by: string
 }) {
   const { data, error } = await supabase
@@ -61,7 +62,8 @@ export async function actualizarMantenimiento(supabase: SupabaseClient, id: stri
   tipo: TipoMantenimiento
   descripcion: string
   kilometraje: number
-  fecha: string
+  intervalo_km: number | null
+  intervalo_dias: number | null
 }) {
   const { error } = await supabase
     .from('mantenimientos')

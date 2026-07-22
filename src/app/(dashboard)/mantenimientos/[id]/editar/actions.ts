@@ -26,12 +26,22 @@ export async function actualizarMantenimientoAction(formData: FormData) {
       throw new Error('Escribe una descripción del mantenimiento')
     }
 
+    const intervaloKmRaw = formData.get('intervalo_km') as string
+    const intervaloDiasRaw = formData.get('intervalo_dias') as string
+    const intervalo_km = intervaloKmRaw ? Number(intervaloKmRaw) : null
+    const intervalo_dias = intervaloDiasRaw ? Number(intervaloDiasRaw) : null
+
+    if (!intervalo_km && !intervalo_dias) {
+      throw new Error('Indica cada cuántos km o cada cuántos días le toca este mantenimiento')
+    }
+
     const supabase = await createClient()
     await actualizarMantenimiento(supabase, id, {
       tipo: formData.get('tipo') as 'preventivo' | 'correctivo',
       descripcion,
       kilometraje,
-      fecha: formData.get('fecha') as string,
+      intervalo_km,
+      intervalo_dias,
     })
   } catch (error) {
     const mensaje = error instanceof Error ? error.message : 'No se pudo guardar el mantenimiento.'

@@ -47,16 +47,27 @@ export default async function NuevoMantenimientoPage({
             />
           </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Fecha</label>
-          <input
-            name="fecha"
-            type="date"
-            required
-            defaultValue={new Date().toISOString().slice(0, 10)}
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-          />
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Cada cuántos km le toca</label>
+            <input
+              name="intervalo_km"
+              type="number"
+              placeholder="Ej. 10000"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Cada cuántos días le toca</label>
+            <input
+              name="intervalo_dias"
+              type="number"
+              placeholder="Ej. 90"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            />
+          </div>
         </div>
+        <p className="text-xs text-slate-500">Llena al menos uno de los dos.</p>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">Descripción</label>
           <textarea
