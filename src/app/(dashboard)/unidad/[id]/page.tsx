@@ -2,7 +2,8 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getVehiculoById } from '@/repositories/vehiculo.repository'
 import { getUsuarioActual } from '@/lib/auth/session'
-import { puede, puedeVer } from '@/lib/auth/permissions'
+import { puede } from '@/lib/auth/permissions'
+import { getModulosVisibles } from '@/repositories/permiso.repository'
 
 export default async function UnidadPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -24,7 +25,8 @@ export default async function UnidadPage({ params }: { params: Promise<{ id: str
   }
 
   const puedeReportar = usuario ? puede(usuario.rol, 'reportes_unidad', 'crear') : false
-  const puedeVerMantenimientos = usuario ? puedeVer(usuario.rol, 'mantenimientos') : false
+  const modulosVisibles = usuario ? await getModulosVisibles(supabase, usuario.rol) : new Set()
+  const puedeVerMantenimientos = modulosVisibles.has('mantenimientos')
 
   return (
     <div className="max-w-md mx-auto space-y-6 text-center py-8">

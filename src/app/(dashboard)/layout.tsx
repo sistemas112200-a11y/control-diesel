@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
+import { getModulosVisibles } from '@/repositories/permiso.repository'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -24,9 +25,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .limit(1)
     .maybeSingle()
 
+  const modulosVisibles = await getModulosVisibles(supabase, perfil.rol)
+
   return (
     <div className="flex">
-      <Sidebar rol={perfil.rol} />
+      <Sidebar modulosVisibles={[...modulosVisibles]} />
       <div className="flex-1 min-h-screen">
         <Header
           nombreCompleto={perfil.nombre_completo ?? user.email ?? ''}

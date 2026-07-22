@@ -9,7 +9,7 @@ export type TipoAlerta =
 export type SeveridadAlerta = 'info' | 'advertencia' | 'critica'
 export type EstadoAlerta = 'nueva' | 'revisada' | 'descartada'
 export type TipoMantenimiento = 'preventivo' | 'correctivo'
-export type EstadoReporte = 'abierto' | 'resuelto'
+export type EstadoReporte = 'abierto' | 'en_proceso' | 'resuelto'
 
 export interface Empresa {
   id: string
@@ -188,8 +188,22 @@ export interface ReporteUnidad {
   vehiculo_id: string
   descripcion: string
   estado: EstadoReporte
+  tomado_por: string | null
+  solucion: string | null
+  fecha_solucion: string | null
   created_by: string | null
   created_at: string
   updated_at: string
   deleted_at: string | null
+}
+
+export interface RefaccionReporte {
+  id: string
+  reporte_id: string
+  terminal_id: string
+  descripcion: string
+  cantidad: number
+  costo: number
+  created_by: string | null
+  created_at: string
 }

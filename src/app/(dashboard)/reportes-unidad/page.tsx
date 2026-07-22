@@ -1,14 +1,16 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getReportes } from '@/repositories/reporte.repository'
-import { marcarResueltoAction } from './actions'
 
 const ESTADO_LABEL: Record<string, string> = {
   abierto: 'Abierto',
+  en_proceso: 'En proceso',
   resuelto: 'Resuelto',
 }
 
 const ESTADO_COLOR: Record<string, string> = {
   abierto: 'bg-red-100 text-red-700',
+  en_proceso: 'bg-amber-100 text-amber-700',
   resuelto: 'bg-green-100 text-green-700',
 }
 
@@ -50,14 +52,9 @@ export default async function ReportesUnidadPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    {r.estado === 'abierto' && (
-                      <form action={marcarResueltoAction}>
-                        <input type="hidden" name="id" value={r.id} />
-                        <button type="submit" className="text-xs font-medium text-brand-dark hover:underline">
-                          Marcar resuelto
-                        </button>
-                      </form>
-                    )}
+                    <Link href={`/reportes-unidad/${r.id}`} className="text-xs font-medium text-brand-dark hover:underline">
+                      Ver / Atender
+                    </Link>
                   </td>
                 </tr>
               ))

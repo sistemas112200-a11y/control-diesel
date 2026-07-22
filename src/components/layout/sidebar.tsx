@@ -3,8 +3,7 @@
 import { useState, useEffect, type ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { puedeVer, type ModuloVista } from '@/lib/auth/permissions'
-import type { RolUsuario } from '@/lib/supabase/types'
+import type { ModuloVista } from '@/lib/auth/permissions'
 
 type Item = { href: string; label: string; modulo: ModuloVista }
 
@@ -71,13 +70,14 @@ function Grupo({
   )
 }
 
-export function Sidebar({ rol }: { rol: RolUsuario }) {
+export function Sidebar({ modulosVisibles }: { modulosVisibles: ModuloVista[] }) {
   const pathname = usePathname()
+  const visibles = new Set(modulosVisibles)
 
-  const itemsPrincipales = ITEMS_PRINCIPALES.filter((item) => puedeVer(rol, item.modulo))
-  const itemsAltas = ITEMS_ALTAS.filter((item) => puedeVer(rol, item.modulo))
-  const itemsDiesel = ITEMS_DIESEL.filter((item) => puedeVer(rol, item.modulo))
-  const itemsFinales = ITEMS_FINALES.filter((item) => puedeVer(rol, item.modulo))
+  const itemsPrincipales = ITEMS_PRINCIPALES.filter((item) => visibles.has(item.modulo))
+  const itemsAltas = ITEMS_ALTAS.filter((item) => visibles.has(item.modulo))
+  const itemsDiesel = ITEMS_DIESEL.filter((item) => visibles.has(item.modulo))
+  const itemsFinales = ITEMS_FINALES.filter((item) => visibles.has(item.modulo))
 
   function renderLink(item: Item) {
     const activo = pathname.startsWith(item.href)
