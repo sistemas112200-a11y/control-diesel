@@ -90,7 +90,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   doc.end()
   const pdfBuffer = await pdfListo
 
-  return new NextResponse(new Blob([pdfBuffer], { type: 'application/pdf' }), {
+  return new NextResponse(pdfBuffer as unknown as BodyInit, {
     status: 200,
     headers: {
       'Content-Type': 'application/pdf',
