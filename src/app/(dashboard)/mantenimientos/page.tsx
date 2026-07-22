@@ -7,7 +7,12 @@ const TIPO_LABEL: Record<string, string> = {
   correctivo: 'Correctivo',
 }
 
-export default async function MantenimientosPage() {
+export default async function MantenimientosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ok?: string }>
+}) {
+  const { ok } = await searchParams
   const supabase = await createClient()
   const mantenimientos = await getMantenimientos(supabase)
 
@@ -23,6 +28,12 @@ export default async function MantenimientosPage() {
         </Link>
       </div>
 
+      {ok === '1' && (
+        <div className="rounded-md bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3">
+          Mantenimiento actualizado correctamente.
+        </div>
+      )}
+
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 text-slate-500 text-xs uppercase">
@@ -32,12 +43,13 @@ export default async function MantenimientosPage() {
               <th className="text-left px-4 py-3">Tipo</th>
               <th className="text-left px-4 py-3">Kilometraje</th>
               <th className="text-left px-4 py-3">Descripción</th>
+              <th className="text-left px-4 py-3"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {mantenimientos.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
                   Aún no hay mantenimientos registrados.
                 </td>
               </tr>
@@ -49,6 +61,11 @@ export default async function MantenimientosPage() {
                   <td className="px-4 py-3 text-slate-600">{TIPO_LABEL[m.tipo]}</td>
                   <td className="px-4 py-3 text-slate-600">{m.kilometraje} km</td>
                   <td className="px-4 py-3 text-slate-600">{m.descripcion}</td>
+                  <td className="px-4 py-3">
+                    <Link href={`/mantenimientos/${m.id}/editar`} className="text-xs font-medium text-brand-dark hover:underline">
+                      Editar
+                    </Link>
+                  </td>
                 </tr>
               ))
             )}

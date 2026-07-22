@@ -27,6 +27,17 @@ export async function getMantenimientosPorVehiculo(supabase: SupabaseClient, veh
   return data as Mantenimiento[]
 }
 
+export async function getMantenimientoById(supabase: SupabaseClient, id: string) {
+  const { data, error } = await supabase
+    .from('mantenimientos')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error) throw error
+  return data as Mantenimiento
+}
+
 export async function crearMantenimiento(supabase: SupabaseClient, input: {
   terminal_id: string
   vehiculo_id: string
@@ -44,4 +55,18 @@ export async function crearMantenimiento(supabase: SupabaseClient, input: {
 
   if (error) throw error
   return data as Mantenimiento
+}
+
+export async function actualizarMantenimiento(supabase: SupabaseClient, id: string, input: {
+  tipo: TipoMantenimiento
+  descripcion: string
+  kilometraje: number
+  fecha: string
+}) {
+  const { error } = await supabase
+    .from('mantenimientos')
+    .update(input)
+    .eq('id', id)
+
+  if (error) throw error
 }
