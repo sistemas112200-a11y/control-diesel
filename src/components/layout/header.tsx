@@ -1,3 +1,6 @@
+import { LogOut } from 'lucide-react'
+import { logoutAction } from '@/lib/auth/actions'
+
 interface HeaderProps {
   nombreCompleto: string
   rol: string
@@ -23,6 +26,15 @@ export function Header({ nombreCompleto, rol, terminalNombre }: HeaderProps) {
           <p className="font-medium text-slate-900 leading-tight">{nombreCompleto}</p>
           <p className="text-slate-500 text-xs leading-tight capitalize">{rol}</p>
         </div>
+        <form action={logoutAction}>
+          <button
+            type="submit"
+            title="Cerrar sesión"
+            className="ml-2 flex items-center gap-1 rounded-md p-2 text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </form>
       </div>
     </header>
   )
