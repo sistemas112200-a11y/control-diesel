@@ -48,10 +48,20 @@ export async function tomarReporte(supabase: SupabaseClient, id: string, usuario
   if (error) throw error
 }
 
-export async function resolverReporte(supabase: SupabaseClient, id: string, solucion: string) {
+export async function resolverReporte(supabase: SupabaseClient, id: string, input: {
+  posible_falla: string
+  solucion: string
+  firma_url: string
+}) {
   const { error } = await supabase
     .from('reportes_unidad')
-    .update({ estado: 'resuelto', solucion, fecha_solucion: new Date().toISOString() })
+    .update({
+      estado: 'resuelto',
+      posible_falla: input.posible_falla,
+      solucion: input.solucion,
+      firma_url: input.firma_url,
+      fecha_solucion: new Date().toISOString(),
+    })
     .eq('id', id)
 
   if (error) throw error

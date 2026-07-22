@@ -191,7 +191,9 @@ export interface ReporteUnidad {
   descripcion: string
   estado: EstadoReporte
   tomado_por: string | null
+  posible_falla: string | null
   solucion: string | null
+  firma_url: string | null
   fecha_solucion: string | null
   created_by: string | null
   created_at: string

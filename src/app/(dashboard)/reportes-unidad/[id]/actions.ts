@@ -30,13 +30,23 @@ export async function resolverReporteAction(formData: FormData) {
   const id = formData.get('id') as string
 
   try {
+    const posibleFalla = (formData.get('posible_falla') as string)?.trim()
+    if (!posibleFalla) {
+      throw new Error('Escribe la posible falla')
+    }
+
     const solucion = (formData.get('solucion') as string)?.trim()
     if (!solucion) {
       throw new Error('Escribe qué se le hizo a la unidad')
     }
 
+    const firmaUrl = formData.get('firma_url') as string
+    if (!firmaUrl) {
+      throw new Error('Falta la firma del mecánico')
+    }
+
     const supabase = await createClient()
-    await resolverReporte(supabase, id, solucion)
+    await resolverReporte(supabase, id, { posible_falla: posibleFalla, solucion, firma_url: firmaUrl })
   } catch (error) {
     const mensaje = error instanceof Error ? error.message : 'No se pudo guardar la solución.'
     redirect(`/reportes-unidad/${id}?error=${encodeURIComponent(mensaje)}`)

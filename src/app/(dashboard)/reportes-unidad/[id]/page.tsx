@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getReporteById, getRefaccionesPorReporte } from '@/repositories/reporte.repository'
+import { FirmaPad } from '@/components/ui/firma-pad'
 import { tomarReporteAction, resolverReporteAction, agregarRefaccionAction } from './actions'
 
 const ESTADO_LABEL: Record<string, string> = {
@@ -63,17 +64,31 @@ export default async function ReporteDetallePage({
         )}
 
         {reporte.estado === 'en_proceso' && (
-          <form action={resolverReporteAction} className="space-y-3 pt-2 border-t border-slate-100">
+          <form action={resolverReporteAction} className="space-y-4 pt-2 border-t border-slate-100">
             <input type="hidden" name="id" value={reporte.id} />
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">¿Qué se le hizo a la unidad?</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Posible falla</label>
+              <textarea
+                name="posible_falla"
+                rows={2}
+                required
+                placeholder="Ej. Válvula de la llanta dañada"
+                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Falla reparada</label>
               <textarea
                 name="solucion"
-                rows={3}
+                rows={2}
                 required
                 placeholder="Ej. Se cambió la llanta delantera derecha"
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Firma del mecánico</label>
+              <FirmaPad name="firma_url" />
             </div>
             <button type="submit" className="rounded-md bg-brand hover:bg-brand-dark text-white text-sm font-medium px-4 py-2 transition-colors">
               Marcar como resuelto
@@ -81,10 +96,26 @@ export default async function ReporteDetallePage({
           </form>
         )}
 
-        {reporte.estado === 'resuelto' && reporte.solucion && (
-          <div className="pt-2 border-t border-slate-100">
-            <p className="text-xs font-medium text-slate-500 mb-1">Solución</p>
-            <p className="text-sm text-slate-700">{reporte.solucion}</p>
+        {reporte.estado === 'resuelto' && (
+          <div className="pt-2 border-t border-slate-100 space-y-3">
+            {reporte.posible_falla && (
+              <div>
+                <p className="text-xs font-medium text-slate-500 mb-1">Posible falla</p>
+                <p className="text-sm text-slate-700">{reporte.posible_falla}</p>
+              </div>
+            )}
+            {reporte.solucion && (
+              <div>
+                <p className="text-xs font-medium text-slate-500 mb-1">Falla reparada</p>
+                <p className="text-sm text-slate-700">{reporte.solucion}</p>
+              </div>
+            )}
+            {reporte.firma_url && (
+              <div>
+                <p className="text-xs font-medium text-slate-500 mb-1">Firma</p>
+                <img src={reporte.firma_url} alt="Firma del mecánico" className="border border-slate-200 rounded-md bg-white h-24" />
+              </div>
+            )}
           </div>
         )}
       </div>
