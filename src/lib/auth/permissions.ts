@@ -1,6 +1,6 @@
 import type { RolUsuario } from '@/lib/supabase/types'
 
-type Modulo = 'vehiculos' | 'operadores' | 'cargas' | 'compras' | 'vales' | 'usuarios' | 'alertas'
+type Modulo = 'vehiculos' | 'operadores' | 'cargas' | 'compras' | 'vales' | 'usuarios' | 'alertas' | 'reportes_unidad'
 type Accion = 'crear' | 'editar' | 'eliminar'
 
 const PERMISOS: Record<Modulo, Record<Accion, RolUsuario[]>> = {
@@ -39,6 +39,11 @@ const PERMISOS: Record<Modulo, Record<Accion, RolUsuario[]>> = {
     editar: ['administrador', 'supervisor'],
     eliminar: ['administrador'],
   },
+  reportes_unidad: {
+    crear: ['administrador', 'supervisor', 'capturista', 'operador'],
+    editar: ['administrador', 'supervisor'],
+    eliminar: ['administrador'],
+  },
 }
 
 export function puede(rol: RolUsuario, modulo: Modulo, accion: Accion): boolean {
@@ -57,6 +62,7 @@ export type ModuloVista =
   | 'usuarios'
   | 'configuracion'
   | 'mantenimientos'
+  | 'reportes_unidad'
 
 const VISTA_POR_ROL: Record<ModuloVista, RolUsuario[]> = {
   dashboard: ['administrador', 'supervisor', 'contabilidad', 'auditor'],
@@ -68,6 +74,7 @@ const VISTA_POR_ROL: Record<ModuloVista, RolUsuario[]> = {
   usuarios: ['administrador'],
   configuracion: ['administrador'],
   mantenimientos: ['administrador', 'supervisor', 'capturista', 'auditor'],
+  reportes_unidad: ['administrador', 'supervisor'],
 }
 
 export function puedeVer(rol: RolUsuario, modulo: ModuloVista): boolean {

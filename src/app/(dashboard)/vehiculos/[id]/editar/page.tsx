@@ -17,8 +17,8 @@ export default async function EditarVehiculoPage({
   const vehiculo = await getVehiculoById(supabase, id)
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
-  const urlCarga = `${baseUrl}/cargas/nuevo?vehiculo_id=${vehiculo.id}`
-  const qrDataUrl = await QRCode.toDataURL(urlCarga, { width: 300, margin: 1 })
+  const urlUnidad = `${baseUrl}/unidad/${vehiculo.id}`
+  const qrDataUrl = await QRCode.toDataURL(urlUnidad, { width: 300, margin: 1 })
 
   return (
     <div className="max-w-xl space-y-6">
@@ -33,7 +33,7 @@ export default async function EditarVehiculoPage({
         <div className="space-y-2">
           <p className="text-sm font-medium text-slate-900">Código QR — {vehiculo.numero_economico}</p>
           <p className="text-xs text-slate-500">
-            Al escanearlo se abre "Nueva carga" con esta unidad ya seleccionada.
+            Al escanearlo se abre un menú con las opciones para esta unidad (nueva carga, reportar problema, ver mantenimientos).
           </p>
           <Link
             href={`/vehiculos/${vehiculo.id}/qr`}

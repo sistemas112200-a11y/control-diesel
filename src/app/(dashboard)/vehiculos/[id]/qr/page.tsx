@@ -9,7 +9,7 @@ export default async function QRVehiculoPage({ params }: { params: Promise<{ id:
   const vehiculo = await getVehiculoById(supabase, id)
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
-  const url = `${baseUrl}/cargas/nuevo?vehiculo_id=${vehiculo.id}`
+  const url = `${baseUrl}/unidad/${vehiculo.id}`
   const qrDataUrl = await QRCode.toDataURL(url, { width: 400, margin: 1 })
 
   return (
@@ -17,7 +17,7 @@ export default async function QRVehiculoPage({ params }: { params: Promise<{ id:
       <div className="print:hidden">
         <h1 className="text-lg font-semibold text-slate-900">Código QR — {vehiculo.numero_economico}</h1>
         <p className="text-sm text-slate-500 mt-1">
-          Imprime y pega este código en la unidad. Al escanearlo desde el celular, se abre el formulario de carga con la unidad ya seleccionada.
+          Imprime y pega este código en la unidad. Al escanearlo desde el celular, se abre un menú con las opciones para esta unidad: nueva carga, reportar un problema o ver mantenimientos.
         </p>
       </div>
 

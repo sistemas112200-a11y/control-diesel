@@ -1,0 +1,64 @@
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+import { getVehiculoById } from '@/repositories/vehiculo.repository'
+import { getUsuarioActual } from '@/lib/auth/session'
+import { puede, puedeVer } from '@/lib/auth/permissions'
+
+export default async function UnidadPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const supabase = await createClient()
+  const vehiculo = await getVehiculoById(supabase, id)
+  const usuario = await getUsuarioActual()
+
+  if (vehiculo.estado !== 'activo') {
+    return (
+      <div className="max-w-md mx-auto text-center space-y-4 py-16">
+        <div className="text-6xl">🚫</div>
+        <h1 className="text-2xl font-bold text-red-600">UNIDAD DESACTIVADA</h1>
+        <p className="text-lg text-slate-700">
+          La unidad <span className="font-semibold">{vehiculo.numero_economico}</span> no está activa en este momento.
+        </p>
+        <p className="text-slate-600">Contacta al personal a cargo antes de continuar.</p>
+      </div>
+    )
+  }
+
+  const puedeReportar = usuario ? puede(usuario.rol, 'reportes_unidad', 'crear') : false
+  const puedeVerMantenimientos = usuario ? puedeVer(usuario.rol, 'mantenimientos') : false
+
+  return (
+    <div className="max-w-md mx-auto space-y-6 text-center py-8">
+      <div>
+        <p className="text-sm text-slate-500">Unidad</p>
+        <h1 className="text-3xl font-bold text-slate-900">{vehiculo.numero_economico}</h1>
+      </div>
+
+      <div className="space-y-3">
+        <Link
+          href={`/cargas/nuevo?vehiculo_id=${vehiculo.id}`}
+          className="block w-full rounded-md bg-brand hover:bg-brand-dark text-white text-sm font-medium py-3 transition-colors"
+        >
+          Nueva carga de diésel
+        </Link>
+
+        {puedeReportar && (
+          <Link
+            href={`/unidad/${vehiculo.id}/reporte`}
+            className="block w-full rounded-md border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-medium py-3 transition-colors"
+          >
+            Reportar un problema
+          </Link>
+        )}
+
+        {puedeVerMantenimientos && (
+          <Link
+            href={`/unidad/${vehiculo.id}/mantenimientos`}
+            className="block w-full rounded-md border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-medium py-3 transition-colors"
+          >
+            Ver mantenimientos
+          </Link>
+        )}
+      </div>
+    </div>
+  )
+}

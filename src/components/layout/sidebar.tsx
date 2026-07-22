@@ -22,6 +22,7 @@ const ITEMS_DIESEL: Item[] = [
   { href: '/cargas', label: 'Cargas', modulo: 'cargas' },
   { href: '/reportes', label: 'Reportes', modulo: 'reportes' },
   { href: '/alertas', label: 'Alertas', modulo: 'alertas' },
+  { href: '/reportes-unidad', label: 'Reportes de unidad', modulo: 'reportes_unidad' },
 ]
 
 const ITEMS_FINALES: Item[] = [
