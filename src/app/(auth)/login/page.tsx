@@ -16,7 +16,7 @@ export default async function LoginPage({
             <div className="w-7 h-7 rounded-lg bg-brand flex items-center justify-center">
               <Fuel className="w-4 h-4 text-slate-900" />
             </div>
-            <span className="text-sm font-medium">Control de Diésel</span>
+            <span className="text-sm font-medium">FlotaTotal</span>
           </div>
 
           <div>

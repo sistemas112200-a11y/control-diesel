@@ -14,16 +14,13 @@ const ITEMS_PRINCIPALES: Item[] = [
 const ITEMS_ALTAS: Item[] = [
   { href: '/vehiculos', label: 'Flota', modulo: 'vehiculos' },
   { href: '/operadores', label: 'Operadores', modulo: 'operadores' },
+  { href: '/mantenimientos', label: 'Mantenimientos', modulo: 'mantenimientos' },
 ]
 
 const ITEMS_DIESEL: Item[] = [
   { href: '/cargas', label: 'Cargas', modulo: 'cargas' },
   { href: '/reportes', label: 'Reportes', modulo: 'reportes' },
   { href: '/alertas', label: 'Alertas', modulo: 'alertas' },
-]
-
-const ITEMS_TALLER: Item[] = [
-  { href: '/mantenimientos', label: 'Mantenimientos', modulo: 'mantenimientos' },
   { href: '/reportes-unidad', label: 'Reportes de unidad', modulo: 'reportes_unidad' },
 ]
 
@@ -80,7 +77,6 @@ export function Sidebar({ modulosVisibles }: { modulosVisibles: ModuloVista[] })
   const itemsPrincipales = ITEMS_PRINCIPALES.filter((item) => visibles.has(item.modulo))
   const itemsAltas = ITEMS_ALTAS.filter((item) => visibles.has(item.modulo))
   const itemsDiesel = ITEMS_DIESEL.filter((item) => visibles.has(item.modulo))
-  const itemsTaller = ITEMS_TALLER.filter((item) => visibles.has(item.modulo))
   const itemsFinales = ITEMS_FINALES.filter((item) => visibles.has(item.modulo))
 
   function renderLink(item: Item) {
@@ -103,13 +99,12 @@ export function Sidebar({ modulosVisibles }: { modulosVisibles: ModuloVista[] })
   return (
     <aside className="w-56 shrink-0 bg-sidebar min-h-screen flex flex-col py-4">
       <div className="px-4 mb-6">
-        <span className="text-white font-semibold text-sm">Control de Diésel</span>
+        <span className="text-white font-semibold text-sm">FlotaTotal</span>
       </div>
       <nav className="flex-1 px-2 space-y-1">
         {itemsPrincipales.map(renderLink)}
         <Grupo titulo="Altas" items={itemsAltas} pathname={pathname} renderLink={renderLink} />
         <Grupo titulo="Diésel" items={itemsDiesel} pathname={pathname} renderLink={renderLink} />
-        <Grupo titulo="Taller" items={itemsTaller} pathname={pathname} renderLink={renderLink} />
         {itemsFinales.map(renderLink)}
       </nav>
     </aside>

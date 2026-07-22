@@ -51,7 +51,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   doc.setTextColor(...BLANCO)
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(16)
-  doc.text('Control de Diésel', margen + 6, y + 11)
+  doc.text('FlotaTotal', margen + 6, y + 11)
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(9)
   doc.setTextColor(...GRIS_BORDE)
@@ -208,7 +208,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   doc.line(margen, pageHeight - margen - 6, margen + anchoUtil, pageHeight - margen - 6)
   doc.setFontSize(7)
   doc.setTextColor(...GRIS_SUAVE)
-  doc.text('Generado automáticamente por Control de Diésel', margen, pageHeight - margen - 2)
+  doc.text('Generado automáticamente por FlotaTotal', margen, pageHeight - margen - 2)
 
   const pdfArrayBuffer = doc.output('arraybuffer')
 
