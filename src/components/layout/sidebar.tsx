@@ -98,7 +98,8 @@ export function Sidebar({ modulosVisibles }: { modulosVisibles: ModuloVista[] })
 
   return (
     <aside className="w-56 shrink-0 bg-sidebar min-h-screen flex flex-col py-4">
-      <div className="px-4 mb-6">
+      <div className="px-4 mb-6 flex items-center gap-2">
+        <img src="/logo-icon.svg" alt="FlotaTotal" className="w-7 h-7 rounded-lg" />
         <span className="text-white font-semibold text-sm">FlotaTotal</span>
       </div>
       <nav className="flex-1 px-2 space-y-1">

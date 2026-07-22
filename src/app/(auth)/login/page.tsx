@@ -1,4 +1,4 @@
-import { Fuel, Route, AlertTriangle, BarChart3, ArrowRight } from 'lucide-react'
+import { Route, AlertTriangle, BarChart3, ArrowRight } from 'lucide-react'
 import { login } from './actions'
 
 export default async function LoginPage({
@@ -11,11 +11,10 @@ export default async function LoginPage({
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
       <div className="w-full max-w-3xl flex rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+        {/* Panel izquierdo: marca */}
         <div className="hidden md:flex flex-col justify-between flex-[1.3] bg-slate-900 text-white p-8">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-brand flex items-center justify-center">
-              <Fuel className="w-4 h-4 text-slate-900" />
-            </div>
+            <img src="/logo-icon.svg" alt="FlotaTotal" className="w-7 h-7 rounded-lg" />
             <span className="text-sm font-medium">FlotaTotal</span>
           </div>
 
@@ -44,6 +43,7 @@ export default async function LoginPage({
           </ul>
         </div>
 
+        {/* Panel derecho: formulario */}
         <div className="flex-1 bg-white p-8 flex flex-col justify-center">
           <h1 className="text-lg font-semibold text-slate-900 mb-1">Bienvenido de vuelta</h1>
           <p className="text-sm text-slate-500 mb-6">Inicia sesión para continuar</p>
