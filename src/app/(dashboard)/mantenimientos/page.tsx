@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getMantenimientos } from '@/repositories/mantenimiento.repository'
+import { estaVencido } from '@/lib/mantenimiento-estado'
 
 const TIPO_LABEL: Record<string, string> = {
   preventivo: 'Preventivo',
@@ -44,32 +45,41 @@ export default async function MantenimientosPage({
               <th className="text-left px-4 py-3">Cada cuántos km</th>
               <th className="text-left px-4 py-3">Cada cuántos días</th>
               <th className="text-left px-4 py-3">Descripción</th>
+              <th className="text-left px-4 py-3">Estado</th>
               <th className="text-left px-4 py-3"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {mantenimientos.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
                   Aún no hay mantenimientos registrados.
                 </td>
               </tr>
             ) : (
-              mantenimientos.map((m) => (
-                <tr key={m.id}>
-                  <td className="px-4 py-3 font-medium text-slate-900">{m.vehiculos?.numero_economico ?? '—'}</td>
-                  <td className="px-4 py-3 text-slate-600">{TIPO_LABEL[m.tipo]}</td>
-                  <td className="px-4 py-3 text-slate-600">{m.kilometraje} km</td>
-                  <td className="px-4 py-3 text-slate-600">{m.intervalo_km ? `${m.intervalo_km} km` : '—'}</td>
-                  <td className="px-4 py-3 text-slate-600">{m.intervalo_dias ? `${m.intervalo_dias} días` : '—'}</td>
-                  <td className="px-4 py-3 text-slate-600">{m.descripcion}</td>
-                  <td className="px-4 py-3">
-                    <Link href={`/mantenimientos/${m.id}/editar`} className="text-xs font-medium text-brand-dark hover:underline">
-                      Editar
-                    </Link>
-                  </td>
-                </tr>
-              ))
+              mantenimientos.map((m) => {
+                const vencido = m.vehiculos ? estaVencido(m, m.vehiculos.km_actual) : false
+                return (
+                  <tr key={m.id}>
+                    <td className="px-4 py-3 font-medium text-slate-900">{m.vehiculos?.numero_economico ?? '—'}</td>
+                    <td className="px-4 py-3 text-slate-600">{TIPO_LABEL[m.tipo]}</td>
+                    <td className="px-4 py-3 text-slate-600">{m.kilometraje} km</td>
+                    <td className="px-4 py-3 text-slate-600">{m.intervalo_km ? `${m.intervalo_km} km` : '—'}</td>
+                    <td className="px-4 py-3 text-slate-600">{m.intervalo_dias ? `${m.intervalo_dias} días` : '—'}</td>
+                    <td className="px-4 py-3 text-slate-600">{m.descripcion}</td>
+                    <td className="px-4 py-3">
+                      <span className={`rounded-full px-2 py-1 text-xs font-medium ${vencido ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                        {vencido ? 'Vencido' : 'Al día'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link href={`/mantenimientos/${m.id}/editar`} className="text-xs font-medium text-brand-dark hover:underline">
+                        Editar
+                      </Link>
+                    </td>
+                  </tr>
+                )
+              })
             )}
           </tbody>
         </table>

@@ -4,7 +4,7 @@ import type { Mantenimiento, TipoMantenimiento } from '@/lib/supabase/types'
 export async function getMantenimientos(supabase: SupabaseClient, vehiculoId?: string) {
   let query = supabase
     .from('mantenimientos')
-    .select('*, vehiculos(numero_economico)')
+    .select('*, vehiculos(numero_economico, km_actual)')
     .is('deleted_at', null)
     .order('fecha', { ascending: false })
 
@@ -12,7 +12,7 @@ export async function getMantenimientos(supabase: SupabaseClient, vehiculoId?: s
 
   const { data, error } = await query
   if (error) throw error
-  return data as (Mantenimiento & { vehiculos: { numero_economico: string } | null })[]
+  return data as (Mantenimiento & { vehiculos: { numero_economico: string; km_actual: number } | null })[]
 }
 
 export async function getMantenimientosPorVehiculo(supabase: SupabaseClient, vehiculoId: string) {

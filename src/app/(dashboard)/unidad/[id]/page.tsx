@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getVehiculoById } from '@/repositories/vehiculo.repository'
+import { getMantenimientosPorVehiculo } from '@/repositories/mantenimiento.repository'
+import { estaVencido } from '@/lib/mantenimiento-estado'
 import { getUsuarioActual } from '@/lib/auth/session'
 import { puede } from '@/lib/auth/permissions'
 import { getModulosVisibles } from '@/repositories/permiso.repository'
@@ -24,6 +26,9 @@ export default async function UnidadPage({ params }: { params: Promise<{ id: str
     )
   }
 
+  const mantenimientos = await getMantenimientosPorVehiculo(supabase, id)
+  const vencidos = mantenimientos.filter((m) => estaVencido(m, vehiculo.km_actual))
+
   const puedeReportar = usuario ? puede(usuario.rol, 'reportes_unidad', 'crear') : false
   const modulosVisibles = usuario ? await getModulosVisibles(supabase, usuario.rol) : new Set()
   const puedeVerMantenimientos = modulosVisibles.has('mantenimientos')
@@ -34,6 +39,17 @@ export default async function UnidadPage({ params }: { params: Promise<{ id: str
         <p className="text-sm text-slate-500">Unidad</p>
         <h1 className="text-3xl font-bold text-slate-900">{vehiculo.numero_economico}</h1>
       </div>
+
+      {vencidos.length > 0 && (
+        <div className="rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-sm px-4 py-3 text-left">
+          <p className="font-medium mb-1">⚠️ Mantenimiento vencido</p>
+          <ul className="list-disc list-inside space-y-0.5">
+            {vencidos.map((m) => (
+              <li key={m.id}>{m.descripcion}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="space-y-3">
         <Link
