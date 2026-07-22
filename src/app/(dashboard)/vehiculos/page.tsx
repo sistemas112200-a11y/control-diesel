@@ -6,7 +6,7 @@ import { cambiarEstadoVehiculoAction } from './actions'
 const ESTADO_LABEL: Record<string, string> = {
   activo: 'Activo',
   taller: 'En taller',
-  baja: 'Baja',
+  baja: 'Fuera de servicio',
 }
 
 const ESTADO_COLOR: Record<string, string> = {
@@ -15,14 +15,30 @@ const ESTADO_COLOR: Record<string, string> = {
   baja: 'bg-red-100 text-red-700',
 }
 
+const PESTAÑAS: { valor: string; label: string }[] = [
+  { valor: '', label: 'Todas' },
+  { valor: 'activo', label: 'Activas' },
+  { valor: 'taller', label: 'En taller' },
+  { valor: 'baja', label: 'Fuera de servicio' },
+]
+
 export default async function VehiculosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; ok?: string }>
+  searchParams: Promise<{ q?: string; ok?: string; estado?: string }>
 }) {
-  const { q, ok } = await searchParams
+  const { q, ok, estado } = await searchParams
   const supabase = await createClient()
-  const vehiculos = await getVehiculos(supabase, undefined, q)
+  const todosLosVehiculos = await getVehiculos(supabase, undefined, q)
+
+  const vehiculos = estado ? todosLosVehiculos.filter((v) => v.estado === estado) : todosLosVehiculos
+
+  const conteos: Record<string, number> = {
+    '': todosLosVehiculos.length,
+    activo: todosLosVehiculos.filter((v) => v.estado === 'activo').length,
+    taller: todosLosVehiculos.filter((v) => v.estado === 'taller').length,
+    baja: todosLosVehiculos.filter((v) => v.estado === 'baja').length,
+  }
 
   return (
     <div className="space-y-6">
@@ -42,7 +58,29 @@ export default async function VehiculosPage({
         </div>
       )}
 
+      <div className="flex items-center gap-2">
+        {PESTAÑAS.map((p) => {
+          const activa = (estado ?? '') === p.valor
+          const params = new URLSearchParams()
+          if (q) params.set('q', q)
+          if (p.valor) params.set('estado', p.valor)
+          const href = params.toString() ? `/vehiculos?${params.toString()}` : '/vehiculos'
+          return (
+            <Link
+              key={p.valor}
+              href={href}
+              className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                activa ? 'bg-brand text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              {p.label} ({conteos[p.valor]})
+            </Link>
+          )
+        })}
+      </div>
+
       <form>
+        {estado && <input type="hidden" name="estado" value={estado} />}
         <input
           type="text"
           name="q"
@@ -68,7 +106,7 @@ export default async function VehiculosPage({
             {vehiculos.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
-                  {q ? `No se encontraron vehículos para "${q}".` : 'Aún no hay vehículos registrados.'}
+                  {q ? `No se encontraron vehículos para "${q}".` : 'No hay vehículos en este estado.'}
                 </td>
               </tr>
             ) : (

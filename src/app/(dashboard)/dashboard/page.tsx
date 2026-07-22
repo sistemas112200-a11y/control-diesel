@@ -21,7 +21,7 @@ export default async function DashboardPage() {
     supabase.from('cargas_combustible').select('litros_cargados').gte('fecha_hora', inicioDeHoy()).is('deleted_at', null),
     supabase.from('cargas_combustible').select('total_pagado, rendimiento_km_l').gte('fecha_hora', inicioDeMes()).is('deleted_at', null),
     supabase.from('alertas').select('id, severidad').eq('estado', 'nueva'),
-    supabase.from('vehiculos').select('id, numero_economico, marca, modelo, rendimiento_esperado_km_l').is('deleted_at', null),
+    supabase.from('vehiculos').select('id, numero_economico, marca, modelo, rendimiento_esperado_km_l, estado').is('deleted_at', null),
   ])
 
   const litrosHoy = (cargasHoy ?? []).reduce((sum, c) => sum + c.litros_cargados, 0)
@@ -32,6 +32,10 @@ export default async function DashboardPage() {
     : 0
   const totalAlertas = alertasActivas?.length ?? 0
 
+  const totalActivas = (vehiculos ?? []).filter((v) => v.estado === 'activo').length
+  const totalTaller = (vehiculos ?? []).filter((v) => v.estado === 'taller').length
+  const totalFueraServicio = (vehiculos ?? []).filter((v) => v.estado === 'baja').length
+
   return (
     <div className="space-y-6">
       <h1 className="text-lg font-semibold text-slate-900">Dashboard</h1>
@@ -41,6 +45,15 @@ export default async function DashboardPage() {
         <TarjetaKpi label="Gasto del mes" valor={`$${gastoMes.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`} />
         <TarjetaKpi label="Rendimiento promedio" valor={`${rendimientoPromedio.toFixed(2)} km/L`} />
         <TarjetaKpi label="Alertas activas" valor={String(totalAlertas)} destacado={totalAlertas > 0} />
+      </div>
+
+      <div>
+        <h2 className="text-sm font-medium text-slate-700 mb-3">Estado de la flota</h2>
+        <div className="grid grid-cols-3 gap-4">
+          <TarjetaEstado href="/vehiculos?estado=activo" label="Activas" valor={totalActivas} color="green" />
+          <TarjetaEstado href="/vehiculos?estado=taller" label="En taller" valor={totalTaller} color="amber" />
+          <TarjetaEstado href="/vehiculos?estado=baja" label="Fuera de servicio" valor={totalFueraServicio} color="red" />
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
@@ -87,5 +100,21 @@ function TarjetaKpi({ label, valor, destacado = false }: { label: string; valor:
       <p className={`text-xs mb-1 ${destacado ? 'text-red-600' : 'text-slate-500'}`}>{label}</p>
       <p className={`text-xl font-semibold ${destacado ? 'text-red-700' : 'text-slate-900'}`}>{valor}</p>
     </div>
+  )
+}
+
+const COLORES_ESTADO: Record<string, { fondo: string; texto: string; textoValor: string }> = {
+  green: { fondo: 'bg-green-50 border-green-200', texto: 'text-green-600', textoValor: 'text-green-700' },
+  amber: { fondo: 'bg-amber-50 border-amber-200', texto: 'text-amber-600', textoValor: 'text-amber-700' },
+  red: { fondo: 'bg-red-50 border-red-200', texto: 'text-red-600', textoValor: 'text-red-700' },
+}
+
+function TarjetaEstado({ href, label, valor, color }: { href: string; label: string; valor: number; color: 'green' | 'amber' | 'red' }) {
+  const c = COLORES_ESTADO[color]
+  return (
+    <Link href={href} className={`block rounded-xl border p-4 hover:opacity-80 transition-opacity ${c.fondo}`}>
+      <p className={`text-xs mb-1 ${c.texto}`}>{label}</p>
+      <p className={`text-2xl font-semibold ${c.textoValor}`}>{valor}</p>
+    </Link>
   )
 }
