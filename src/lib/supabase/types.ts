@@ -186,6 +186,7 @@ export interface Mantenimiento {
 
 export interface ReporteUnidad {
   id: string
+  folio: string
   terminal_id: string
   vehiculo_id: string
   operador_id: string | null

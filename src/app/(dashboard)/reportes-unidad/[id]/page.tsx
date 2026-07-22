@@ -32,16 +32,26 @@ export default async function ReporteDetallePage({
 
   return (
     <div className="max-w-2xl space-y-6">
-      <div>
-        <Link href="/reportes-unidad" className="text-xs font-medium text-brand-dark hover:underline">
-          ← Volver a Reportes de unidad
-        </Link>
-        <h1 className="text-lg font-semibold text-slate-900 mt-1">
-          {reporte.vehiculos?.numero_economico ?? '—'}
-        </h1>
-        {reporte.operadores?.nombre_completo && (
-          <p className="text-sm text-slate-500">Reportado por: {reporte.operadores.nombre_completo}</p>
-        )}
+      <div className="flex items-center justify-between">
+        <div>
+          <Link href="/reportes-unidad" className="text-xs font-medium text-brand-dark hover:underline">
+            ← Volver a Reportes de unidad
+          </Link>
+          <h1 className="text-lg font-semibold text-slate-900 mt-1">
+            {reporte.folio} — {reporte.vehiculos?.numero_economico ?? '—'}
+          </h1>
+          {reporte.operadores?.nombre_completo && (
+            <p className="text-sm text-slate-500">Reportado por: {reporte.operadores.nombre_completo}</p>
+          )}
+        </div>
+        <a
+          href={`/reportes-unidad/${id}/pdf`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-md border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-medium px-4 py-2 transition-colors"
+        >
+          Descargar PDF
+        </a>
       </div>
 
       {error && (
