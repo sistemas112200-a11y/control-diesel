@@ -5,6 +5,7 @@ import type { ModuloVista } from '@/lib/auth/permissions'
 const TODOS_LOS_MODULOS: ModuloVista[] = [
   'dashboard', 'vehiculos', 'operadores', 'cargas', 'alertas',
   'reportes', 'usuarios', 'configuracion', 'mantenimientos', 'reportes_unidad',
+  'pases_salida',
 ]
 
 export async function getModulosVisibles(supabase: SupabaseClient, rol: RolUsuario): Promise<Set<ModuloVista>> {
