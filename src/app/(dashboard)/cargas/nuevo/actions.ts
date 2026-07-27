@@ -6,28 +6,11 @@ import { createClient } from '@/lib/supabase/server'
 import { registrarCarga } from '@/domain/services/carga.service'
 import { getUsuarioActual } from '@/lib/auth/session'
 
-async function subirFoto(supabase: any, archivo: FormDataEntryValue | null, prefijo: string) {
-  if (!archivo || !(archivo instanceof File) || archivo.size === 0) return undefined
-  const nombre = `${prefijo}-${Date.now()}-${archivo.name}`
-  const { data, error } = await supabase.storage.from('cargas-foto').upload(nombre, archivo)
-  if (error) throw error
-  const { data: urlData } = supabase.storage.from('cargas-foto').getPublicUrl(data.path)
-  return urlData.publicUrl
-}
-
 export async function crearCargaAction(formData: FormData) {
   const usuario = await getUsuarioActual()
   if (!usuario) throw new Error('No autenticado')
 
   const supabase = await createClient()
-
-  const [fotoTicket, fotoKm, fotoBomba, fotoTanque1, fotoTanque2] = await Promise.all([
-    subirFoto(supabase, formData.get('foto_ticket'), 'ticket'),
-    subirFoto(supabase, formData.get('foto_kilometraje'), 'km'),
-    subirFoto(supabase, formData.get('foto_bomba'), 'bomba'),
-    subirFoto(supabase, formData.get('foto_tanque1'), 'tanque1'),
-    subirFoto(supabase, formData.get('foto_tanque2'), 'tanque2'),
-  ])
 
   const litros = Number(formData.get('litros_cargados'))
   const precio = Number(formData.get('precio_litro'))
@@ -42,11 +25,11 @@ export async function crearCargaAction(formData: FormData) {
     total_pagado: litros * precio,
     metodo_pago: formData.get('metodo_pago') as any,
     folio_ticket: (formData.get('folio_ticket') as string) || undefined,
-    foto_ticket_url: fotoTicket!,
-    foto_kilometraje_url: fotoKm!,
-    foto_bomba_url: fotoBomba!,
-    foto_tanque1_url: fotoTanque1!,
-    foto_tanque2_url: fotoTanque2,
+    foto_ticket_url: formData.get('foto_ticket_url') as string,
+    foto_kilometraje_url: formData.get('foto_kilometraje_url') as string,
+    foto_bomba_url: formData.get('foto_bomba_url') as string,
+    foto_tanque1_url: formData.get('foto_tanque1_url') as string,
+    foto_tanque2_url: (formData.get('foto_tanque2_url') as string) || undefined,
     observaciones: (formData.get('observaciones') as string) || undefined,
   }
 
