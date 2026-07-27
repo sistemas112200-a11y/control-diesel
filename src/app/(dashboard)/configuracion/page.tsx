@@ -4,7 +4,7 @@ import { CheckboxPermiso } from './checkbox-permiso'
 import type { RolUsuario } from '@/lib/supabase/types'
 import type { ModuloVista } from '@/lib/auth/permissions'
 
-const ROLES: RolUsuario[] = ['administrador', 'supervisor', 'capturista', 'operador', 'contabilidad', 'auditor']
+const ROLES: RolUsuario[] = ['administrador', 'supervisor', 'capturista', 'operador', 'contabilidad', 'auditor', 'guardia']
 
 const MODULOS: { valor: ModuloVista; label: string }[] = [
   { valor: 'dashboard', label: 'Dashboard' },
@@ -15,6 +15,7 @@ const MODULOS: { valor: ModuloVista; label: string }[] = [
   { valor: 'reportes', label: 'Reportes' },
   { valor: 'alertas', label: 'Alertas' },
   { valor: 'reportes_unidad', label: 'Reportes de unidad' },
+  { valor: 'pases_salida', label: 'Pases de salida' },
   { valor: 'usuarios', label: 'Usuarios' },
   { valor: 'configuracion', label: 'Configuración' },
 ]
@@ -26,6 +27,7 @@ const ROL_LABEL: Record<RolUsuario, string> = {
   operador: 'Operador',
   contabilidad: 'Contabilidad',
   auditor: 'Auditor',
+  guardia: 'Guardia',
 }
 
 export default async function ConfiguracionPage() {
