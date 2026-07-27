@@ -14,14 +14,22 @@ function inicioDeMes() {
   return d.toISOString()
 }
 
+function claseComparacion(real: number | null, esperado: number): string {
+  if (real == null) return 'text-slate-400'
+  if (real >= esperado) return 'text-green-600 font-medium'
+  if (real < esperado * 0.85) return 'text-red-600 font-medium'
+  return 'text-amber-600 font-medium'
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient()
 
-  const [{ data: cargasHoy }, { data: cargasMes }, { data: alertasActivas }, { data: vehiculos }] = await Promise.all([
+  const [{ data: cargasHoy }, { data: cargasMes }, { data: alertasActivas }, { data: vehiculos }, { data: rendimientosCargas }] = await Promise.all([
     supabase.from('cargas_combustible').select('litros_cargados').gte('fecha_hora', inicioDeHoy()).is('deleted_at', null),
     supabase.from('cargas_combustible').select('total_pagado, rendimiento_km_l').gte('fecha_hora', inicioDeMes()).is('deleted_at', null),
     supabase.from('alertas').select('id, severidad').eq('estado', 'nueva'),
     supabase.from('vehiculos').select('id, numero_economico, marca, modelo, rendimiento_esperado_km_l, estado').is('deleted_at', null),
+    supabase.from('cargas_combustible').select('vehiculo_id, rendimiento_km_l').is('deleted_at', null).not('rendimiento_km_l', 'is', null),
   ])
 
   const litrosHoy = (cargasHoy ?? []).reduce((sum, c) => sum + c.litros_cargados, 0)
@@ -35,6 +43,19 @@ export default async function DashboardPage() {
   const totalActivas = (vehiculos ?? []).filter((v) => v.estado === 'activo').length
   const totalTaller = (vehiculos ?? []).filter((v) => v.estado === 'taller').length
   const totalFueraServicio = (vehiculos ?? []).filter((v) => v.estado === 'baja').length
+
+  const mapaRendimiento = new Map<string, number[]>()
+  for (const c of rendimientosCargas ?? []) {
+    if (c.rendimiento_km_l == null) continue
+    const arr = mapaRendimiento.get(c.vehiculo_id) ?? []
+    arr.push(c.rendimiento_km_l)
+    mapaRendimiento.set(c.vehiculo_id, arr)
+  }
+  function rendimientoRealDe(vehiculoId: string): number | null {
+    const arr = mapaRendimiento.get(vehiculoId)
+    if (!arr || arr.length === 0) return null
+    return arr.reduce((a, b) => a + b, 0) / arr.length
+  }
 
   return (
     <div className="space-y-6">
@@ -69,23 +90,30 @@ export default async function DashboardPage() {
               <th className="text-left px-4 py-2">Unidad</th>
               <th className="text-left px-4 py-2">Marca / Modelo</th>
               <th className="text-left px-4 py-2">Rendimiento esperado</th>
+              <th className="text-left px-4 py-2">Rendimiento real</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {(vehiculos ?? []).length === 0 ? (
               <tr>
-                <td colSpan={3} className="px-4 py-6 text-center text-slate-500">
+                <td colSpan={4} className="px-4 py-6 text-center text-slate-500">
                   Aún no hay vehículos registrados.
                 </td>
               </tr>
             ) : (
-              vehiculos!.map((v) => (
-                <tr key={v.id}>
-                  <td className="px-4 py-2 font-medium text-slate-900">{v.numero_economico}</td>
-                  <td className="px-4 py-2 text-slate-600">{v.marca} {v.modelo}</td>
-                  <td className="px-4 py-2 text-slate-600">{v.rendimiento_esperado_km_l} km/L</td>
-                </tr>
-              ))
+              vehiculos!.map((v) => {
+                const real = rendimientoRealDe(v.id)
+                return (
+                  <tr key={v.id}>
+                    <td className="px-4 py-2 font-medium text-slate-900">{v.numero_economico}</td>
+                    <td className="px-4 py-2 text-slate-600">{v.marca} {v.modelo}</td>
+                    <td className="px-4 py-2 text-slate-600">{v.rendimiento_esperado_km_l} km/L</td>
+                    <td className={`px-4 py-2 ${claseComparacion(real, v.rendimiento_esperado_km_l)}`}>
+                      {real != null ? `${real.toFixed(2)} km/L` : 'Sin datos'}
+                    </td>
+                  </tr>
+                )
+              })
             )}
           </tbody>
         </table>
