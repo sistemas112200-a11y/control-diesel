@@ -35,10 +35,10 @@ export default async function ReporteDetallePage({
       <div className="flex items-center justify-between">
         <div>
           <Link href="/reportes-unidad" className="text-xs font-medium text-brand-dark hover:underline">
-            ← Volver a Reportes de unidad
+            Volver a Reportes de unidad
           </Link>
           <h1 className="text-lg font-semibold text-slate-900 mt-1">
-            {reporte.folio} — {reporte.vehiculos?.numero_economico ?? '—'}
+            {reporte.folio} - {reporte.vehiculos?.numero_economico ?? '-'}
           </h1>
           {reporte.operadores?.nombre_completo && (
             <p className="text-sm text-slate-500">Reportado por: {reporte.operadores.nombre_completo}</p>
@@ -85,7 +85,7 @@ export default async function ReporteDetallePage({
                 name="posible_falla"
                 rows={2}
                 required
-                placeholder="Ej. Válvula de la llanta dañada"
+                placeholder="Ej. Valvula de la llanta danada"
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
               />
             </div>
@@ -95,12 +95,12 @@ export default async function ReporteDetallePage({
                 name="solucion"
                 rows={2}
                 required
-                placeholder="Ej. Se cambió la llanta delantera derecha"
+                placeholder="Ej. Se cambio la llanta delantera derecha"
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Firma del mecánico</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Firma del mecanico</label>
               <FirmaPad name="firma_url" />
             </div>
             <button type="submit" className="rounded-md bg-brand hover:bg-brand-dark text-white text-sm font-medium px-4 py-2 transition-colors">
@@ -126,11 +126,11 @@ export default async function ReporteDetallePage({
             {reporte.firma_url && (
               <div>
                 <p className="text-xs font-medium text-slate-500 mb-1">Firma</p>
-                <img src={reporte.firma_url} alt="Firma del mecánico" className="border border-slate-200 rounded-md bg-white h-24" />
+                <img src={reporte.firma_url} alt="Firma del mecanico" className="border border-slate-200 rounded-md bg-white h-24" />
               </div>
             )}
             <div className="pt-2">
-              <p className="text-sm text-slate-600 mb-2">La unidad ya regresó a estado Activo.</p>
+              <p className="text-sm text-slate-600 mb-2">La unidad ya regreso a estado Activo.</p>
               <Link
                 href={`/unidad/${reporte.vehiculo_id}/pase-salida`}
                 className="inline-block rounded-md bg-brand hover:bg-brand-dark text-white text-sm font-medium px-4 py-2 transition-colors"
@@ -146,12 +146,12 @@ export default async function ReporteDetallePage({
         <h2 className="text-sm font-semibold text-slate-900">Refacciones utilizadas</h2>
 
         {refacciones.length === 0 ? (
-          <p className="text-sm text-slate-500">Aún no se han agregado refacciones.</p>
+          <p className="text-sm text-slate-500">Aun no se han agregado refacciones.</p>
         ) : (
           <table className="w-full text-sm">
             <thead className="text-slate-500 text-xs uppercase">
               <tr>
-                <th className="text-left py-2">Refacción</th>
+                <th className="text-left py-2">Refaccion</th>
                 <th className="text-left py-2">Cantidad</th>
                 <th className="text-left py-2">Costo</th>
                 <th className="text-left py-2">Subtotal</th>
@@ -179,7 +179,7 @@ export default async function ReporteDetallePage({
         <form action={agregarRefaccionAction} className="grid grid-cols-4 gap-2 items-end pt-2 border-t border-slate-100">
           <input type="hidden" name="reporte_id" value={reporte.id} />
           <div className="col-span-2">
-            <label className="block text-xs font-medium text-slate-700 mb-1">Refacción</label>
+            <label className="block text-xs font-medium text-slate-700 mb-1">Refaccion</label>
             <input name="descripcion" required placeholder="Ej. Llanta 295/80 R22.5" className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm" />
           </div>
           <div>
@@ -192,7 +192,7 @@ export default async function ReporteDetallePage({
           </div>
           <div className="col-span-4">
             <button type="submit" className="rounded-md border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-medium px-4 py-2 transition-colors">
-              + Agregar refacción
+              + Agregar refaccion
             </button>
           </div>
         </form>
