@@ -54,6 +54,18 @@ export async function crearCarga(supabase: SupabaseClient, input: CargaInput & {
   return data as CargaCombustible
 }
 
+export async function actualizarCarga(supabase: SupabaseClient, id: string, input: Partial<CargaInput>) {
+  const { data, error } = await supabase
+    .from('cargas_combustible')
+    .update(input)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as CargaCombustible
+}
+
 export async function eliminarCarga(supabase: SupabaseClient, id: string) {
   const { error } = await supabase
     .from('cargas_combustible')

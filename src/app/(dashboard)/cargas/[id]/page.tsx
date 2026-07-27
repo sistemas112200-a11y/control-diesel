@@ -1,8 +1,10 @@
+import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCargaById } from '@/repositories/carga.repository'
 import { getUsuarioActual } from '@/lib/auth/session'
-import { puedeVerDetalleCargas } from '@/lib/auth/permissions'
+import { puede, puedeVerDetalleCargas } from '@/lib/auth/permissions'
+import { BotonEliminarCarga } from './boton-eliminar'
 
 export default async function DetalleCargaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -33,9 +35,27 @@ export default async function DetalleCargaPage({ params }: { params: Promise<{ i
     { label: 'Tanque 2', url: carga.foto_tanque2_url },
   ].filter((f) => f.url)
 
+  const puedeEditar = puede(usuarioActual.rol, 'cargas', 'editar')
+  const puedeEliminar = puede(usuarioActual.rol, 'cargas', 'eliminar')
+
   return (
     <div className="max-w-3xl space-y-6">
-      <h1 className="text-lg font-semibold text-slate-900">Detalle de carga</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-lg font-semibold text-slate-900">Detalle de carga</h1>
+        {(puedeEditar || puedeEliminar) && (
+          <div className="flex gap-3">
+            {puedeEditar && (
+              <Link
+                href={`/cargas/${id}/editar`}
+                className="rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50 text-sm font-medium px-4 py-2 transition-colors"
+              >
+                Editar
+              </Link>
+            )}
+            {puedeEliminar && <BotonEliminarCarga id={id} />}
+          </div>
+        )}
+      </div>
 
       <div className="bg-white rounded-xl border border-slate-200 p-6 grid grid-cols-2 gap-4 text-sm">
         <Dato label="Unidad" valor={vehiculo?.numero_economico ?? '—'} />
