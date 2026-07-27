@@ -1,6 +1,6 @@
 import type { RolUsuario } from '@/lib/supabase/types'
 
-type Modulo = 'vehiculos' | 'operadores' | 'cargas' | 'compras' | 'vales' | 'usuarios' | 'alertas' | 'reportes_unidad'
+type Modulo = 'vehiculos' | 'operadores' | 'cargas' | 'compras' | 'vales' | 'usuarios' | 'alertas' | 'reportes_unidad' | 'pases_salida'
 type Accion = 'crear' | 'editar' | 'eliminar'
 
 const PERMISOS: Record<Modulo, Record<Accion, RolUsuario[]>> = {
@@ -44,6 +44,11 @@ const PERMISOS: Record<Modulo, Record<Accion, RolUsuario[]>> = {
     editar: ['administrador', 'supervisor'],
     eliminar: ['administrador'],
   },
+  pases_salida: {
+    crear: ['administrador', 'supervisor', 'guardia'],
+    editar: ['administrador', 'supervisor'],
+    eliminar: ['administrador'],
+  },
 }
 
 export function puede(rol: RolUsuario, modulo: Modulo, accion: Accion): boolean {
@@ -51,6 +56,8 @@ export function puede(rol: RolUsuario, modulo: Modulo, accion: Accion): boolean 
 }
 
 // --- Qué puede VER cada rol (menú y acceso directo a la pantalla) ---
+// Nota: esto ya no se usa para el menú (ahora se controla desde Configuración → Permisos por rol),
+// pero se deja vigente por si algo más lo sigue usando.
 
 export type ModuloVista =
   | 'dashboard'
@@ -63,6 +70,7 @@ export type ModuloVista =
   | 'configuracion'
   | 'mantenimientos'
   | 'reportes_unidad'
+  | 'pases_salida'
 
 const VISTA_POR_ROL: Record<ModuloVista, RolUsuario[]> = {
   dashboard: ['administrador', 'supervisor', 'contabilidad', 'auditor'],
@@ -75,6 +83,7 @@ const VISTA_POR_ROL: Record<ModuloVista, RolUsuario[]> = {
   configuracion: ['administrador'],
   mantenimientos: ['administrador', 'supervisor', 'capturista', 'auditor'],
   reportes_unidad: ['administrador', 'supervisor'],
+  pases_salida: ['administrador', 'supervisor', 'guardia'],
 }
 
 export function puedeVer(rol: RolUsuario, modulo: ModuloVista): boolean {

@@ -1,4 +1,4 @@
-export type RolUsuario = 'administrador' | 'supervisor' | 'capturista' | 'operador' | 'contabilidad' | 'auditor'
+export type RolUsuario = 'administrador' | 'supervisor' | 'capturista' | 'operador' | 'contabilidad' | 'auditor' | 'guardia'
 export type EstadoVehiculo = 'activo' | 'taller' | 'baja'
 export type EstadoVale = 'pendiente' | 'autorizado' | 'usado' | 'cancelado'
 export type MetodoPago = 'efectivo' | 'tarjeta_empresa' | 'transferencia' | 'credito_proveedor' | 'vale'
@@ -175,9 +175,9 @@ export interface Mantenimiento {
   tipo: TipoMantenimiento
   descripcion: string
   kilometraje: number
-  fecha: string
   intervalo_km: number | null
   intervalo_dias: number | null
+  fecha: string
   created_by: string | null
   created_at: string
   updated_at: string
@@ -186,16 +186,16 @@ export interface Mantenimiento {
 
 export interface ReporteUnidad {
   id: string
-  folio: string
   terminal_id: string
   vehiculo_id: string
-  operador_id: string | null
   descripcion: string
   estado: EstadoReporte
   tomado_por: string | null
+  operador_id: string | null
   posible_falla: string | null
   solucion: string | null
   firma_url: string | null
+  folio: string
   fecha_solucion: string | null
   created_by: string | null
   created_at: string
@@ -212,4 +212,20 @@ export interface RefaccionReporte {
   costo: number
   created_by: string | null
   created_at: string
+}
+
+export interface PaseSalida {
+  id: string
+  terminal_id: string
+  vehiculo_id: string
+  destino: string | null
+  firma1_nombre: string | null
+  firma1_url: string | null
+  firma2_nombre: string | null
+  firma2_url: string | null
+  firma3_nombre: string | null
+  firma3_url: string | null
+  created_by: string | null
+  created_at: string
+  deleted_at: string | null
 }

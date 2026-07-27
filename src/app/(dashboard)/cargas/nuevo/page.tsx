@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getVehiculos, getVehiculoById } from '@/repositories/vehiculo.repository'
+import { BotonGuardar } from '@/components/ui/boton-guardar'
 import { crearCargaAction } from './actions'
 
 export default async function NuevaCargaPage({
@@ -96,9 +97,7 @@ export default async function NuevaCargaPage({
           <label className="block text-sm font-medium text-slate-700 mb-1">Observaciones</label>
           <textarea name="observaciones" rows={2} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
         </div>
-        <button type="submit" className="w-full rounded-md bg-brand hover:bg-brand-dark text-white text-sm font-medium py-2 transition-colors">
-          Guardar carga
-        </button>
+        <BotonGuardar texto="Guardar carga" />
       </form>
     </div>
   )
