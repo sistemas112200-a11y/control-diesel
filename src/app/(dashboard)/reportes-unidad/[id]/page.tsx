@@ -44,7 +44,7 @@ export default async function ReporteDetallePage({
             <p className="text-sm text-slate-500">Reportado por: {reporte.operadores.nombre_completo}</p>
           )}
         </div>
-        <a
+        
           href={`/reportes-unidad/${id}/pdf`}
           target="_blank"
           rel="noopener noreferrer"
@@ -129,6 +129,15 @@ export default async function ReporteDetallePage({
                 <img src={reporte.firma_url} alt="Firma del mecánico" className="border border-slate-200 rounded-md bg-white h-24" />
               </div>
             )}
+            <div className="pt-2">
+              <p className="text-sm text-slate-600 mb-2">La unidad ya regresó a estado Activo.</p>
+              <Link
+                href={`/unidad/${reporte.vehiculo_id}/pase-salida`}
+                className="inline-block rounded-md bg-brand hover:bg-brand-dark text-white text-sm font-medium px-4 py-2 transition-colors"
+              >
+                Generar pase de salida
+              </Link>
+            </div>
           </div>
         )}
       </div>

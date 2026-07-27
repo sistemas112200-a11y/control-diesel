@@ -47,12 +47,21 @@ export async function crearReporte(supabase: SupabaseClient, input: {
 }
 
 export async function tomarReporte(supabase: SupabaseClient, id: string, usuarioId: string) {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('reportes_unidad')
     .update({ estado: 'en_proceso', tomado_por: usuarioId })
     .eq('id', id)
+    .select('vehiculo_id')
+    .single()
 
   if (error) throw error
+
+  const { error: errorVehiculo } = await supabase
+    .from('vehiculos')
+    .update({ estado: 'taller' })
+    .eq('id', data.vehiculo_id)
+
+  if (errorVehiculo) throw errorVehiculo
 }
 
 export async function resolverReporte(supabase: SupabaseClient, id: string, input: {
@@ -60,7 +69,7 @@ export async function resolverReporte(supabase: SupabaseClient, id: string, inpu
   solucion: string
   firma_url: string
 }) {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('reportes_unidad')
     .update({
       estado: 'resuelto',
@@ -70,8 +79,17 @@ export async function resolverReporte(supabase: SupabaseClient, id: string, inpu
       fecha_solucion: new Date().toISOString(),
     })
     .eq('id', id)
+    .select('vehiculo_id')
+    .single()
 
   if (error) throw error
+
+  const { error: errorVehiculo } = await supabase
+    .from('vehiculos')
+    .update({ estado: 'activo' })
+    .eq('id', data.vehiculo_id)
+
+  if (errorVehiculo) throw errorVehiculo
 }
 
 export async function getRefaccionesPorReporte(supabase: SupabaseClient, reporteId: string) {
