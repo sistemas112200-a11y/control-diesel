@@ -29,6 +29,7 @@ const ITEMS_TALLER: Item[] = [
 ]
 
 const ITEMS_FINALES: Item[] = [
+  { href: '/pases-salida', label: 'Pases de salida', modulo: 'pases_salida' },
   { href: '/usuarios', label: 'Usuarios', modulo: 'usuarios' },
   { href: '/configuracion', label: 'Configuración', modulo: 'configuracion' },
 ]
