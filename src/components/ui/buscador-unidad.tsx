@@ -8,13 +8,16 @@ export function BuscadorUnidad({
   opciones,
   name,
   placeholder = 'Buscar unidad...',
+  valorInicial,
 }: {
   opciones: Opcion[]
   name: string
   placeholder?: string
+  valorInicial?: string
 }) {
-  const [texto, setTexto] = useState('')
-  const [seleccionId, setSeleccionId] = useState('')
+  const opcionInicial = opciones.find((o) => o.id === valorInicial)
+  const [texto, setTexto] = useState(opcionInicial?.label ?? '')
+  const [seleccionId, setSeleccionId] = useState(opcionInicial?.id ?? '')
   const [abierto, setAbierto] = useState(false)
   const contenedorRef = useRef<HTMLDivElement>(null)
 

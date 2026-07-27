@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { crearCargaAction } from './actions'
+import { BuscadorUnidad } from '@/components/ui/buscador-unidad'
 
 async function subirFoto(archivo: File | null, prefijo: string): Promise<string | undefined> {
   if (!archivo || archivo.size === 0) return undefined
@@ -31,12 +32,25 @@ export function FormularioNuevaCarga({
   async function manejarEnvio(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError('')
+
+    const form = e.currentTarget
+    const datos = new FormData(form)
+
+    const vehiculoId = datos.get('vehiculo_id') as string
+    const operadorId = datos.get('operador_id') as string
+
+    if (!vehiculoId) {
+      setError('Selecciona una unidad de la lista')
+      return
+    }
+    if (!operadorId) {
+      setError('Selecciona un operador de la lista')
+      return
+    }
+
     setSubiendo(true)
 
     try {
-      const form = e.currentTarget
-      const datos = new FormData(form)
-
       const fotoTicket = datos.get('foto_ticket') as File
       const fotoKm = datos.get('foto_kilometraje') as File
       const fotoBomba = datos.get('foto_bomba') as File
@@ -57,8 +71,8 @@ export function FormularioNuevaCarga({
 
       const datosFinales = new FormData()
       datosFinales.set('terminal_id', datos.get('terminal_id') as string)
-      datosFinales.set('vehiculo_id', datos.get('vehiculo_id') as string)
-      datosFinales.set('operador_id', datos.get('operador_id') as string)
+      datosFinales.set('vehiculo_id', vehiculoId)
+      datosFinales.set('operador_id', operadorId)
       datosFinales.set('kilometraje', datos.get('kilometraje') as string)
       datosFinales.set('folio_ticket', (datos.get('folio_ticket') as string) ?? '')
       datosFinales.set('litros_cargados', datos.get('litros_cargados') as string)
@@ -87,14 +101,23 @@ export function FormularioNuevaCarga({
       )}
 
       <div className="grid grid-cols-2 gap-4">
-        <Select
-          label="Unidad"
-          name="vehiculo_id"
-          required
-          defaultValue={vehiculoIdPreseleccionado}
-          options={vehiculos}
-        />
-        <Select label="Operador" name="operador_id" required options={operadores} />
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Unidad</label>
+          <BuscadorUnidad
+            name="vehiculo_id"
+            placeholder="Buscar unidad..."
+            opciones={vehiculos.map((v) => ({ id: v.value, label: v.label }))}
+            valorInicial={vehiculoIdPreseleccionado}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Operador</label>
+          <BuscadorUnidad
+            name="operador_id"
+            placeholder="Buscar operador..."
+            opciones={operadores.map((o) => ({ id: o.value, label: o.label }))}
+          />
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <Campo label="Kilometraje" name="kilometraje" type="number" required />
@@ -144,32 +167,6 @@ function Campo({ label, name, type = 'text', required = false, step }: { label: 
     <div>
       <label htmlFor={name} className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
       <input id={name} name={name} type={type} step={step} required={required} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-    </div>
-  )
-}
-
-function Select({
-  label,
-  name,
-  required = false,
-  options,
-  defaultValue,
-}: {
-  label: string
-  name: string
-  required?: boolean
-  options: { value: string; label: string }[]
-  defaultValue?: string
-}) {
-  return (
-    <div>
-      <label htmlFor={name} className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
-      <select id={name} name={name} required={required} defaultValue={defaultValue ?? ''} className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-        <option value="">Selecciona...</option>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>{o.label}</option>
-        ))}
-      </select>
     </div>
   )
 }
