@@ -1,4 +1,4 @@
-export type RolUsuario = 'administrador' | 'supervisor' | 'capturista' | 'operador' | 'contabilidad' | 'auditor' | 'guardia'
+export type RolUsuario = 'administrador' | 'supervisor' | 'capturista' | 'operador' | 'contabilidad' | 'auditor' | 'guardia' | 'desarrollador'
 export type EstadoVehiculo = 'activo' | 'taller' | 'baja'
 export type EstadoVale = 'pendiente' | 'autorizado' | 'usado' | 'cancelado'
 export type MetodoPago = 'efectivo' | 'tarjeta_empresa' | 'transferencia' | 'credito_proveedor' | 'vale'
@@ -15,6 +15,8 @@ export interface Empresa {
   id: string
   nombre: string
   rfc: string | null
+  limite_usuarios: number | null
+  limite_vehiculos: number | null
   created_at: string
   updated_at: string
 }
@@ -36,6 +38,12 @@ export interface Usuario {
   activo: boolean
   created_at: string
   updated_at: string
+}
+
+export interface ModuloEmpresa {
+  empresa_id: string
+  modulo: string
+  activo: boolean
 }
 
 export interface Proveedor {

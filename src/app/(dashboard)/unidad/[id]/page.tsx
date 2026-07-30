@@ -44,7 +44,7 @@ export default async function UnidadPage({ params }: { params: Promise<{ id: str
 
   const puedeReportar = usuario ? puede(usuario.rol, 'reportes_unidad', 'crear') : false
   const puedeGenerarPase = usuario ? puede(usuario.rol, 'pases_salida', 'crear') : false
-  const modulosVisibles = usuario ? await getModulosVisibles(supabase, usuario.rol) : new Set()
+  const modulosVisibles = usuario ? await getModulosVisibles(supabase, usuario.rol, usuario.empresaId) : new Set()
   const puedeVerMantenimientos = modulosVisibles.has('mantenimientos')
   const esGuardia = usuario?.rol === 'guardia'
 

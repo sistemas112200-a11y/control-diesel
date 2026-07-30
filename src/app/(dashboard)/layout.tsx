@@ -18,6 +18,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   if (!perfil) redirect('/login')
 
+  if (perfil.rol === 'desarrollador') redirect('/desarrollador')
+
   const { data: terminal } = await supabase
     .from('usuario_terminales')
     .select('terminales(nombre)')
@@ -25,7 +27,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .limit(1)
     .maybeSingle()
 
-  const modulosVisibles = await getModulosVisibles(supabase, perfil.rol)
+  const modulosVisibles = await getModulosVisibles(supabase, perfil.rol, perfil.empresa_id)
 
   return (
     <div className="flex">
