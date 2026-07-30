@@ -28,7 +28,9 @@ export default async function NuevoUsuarioPage() {
             <option value="operador">Operador</option>
             <option value="contabilidad">Contabilidad</option>
             <option value="auditor">Auditor</option>
+            <option value="guardia">Guardia</option>
             <option value="administrador">Administrador</option>
+            <option value="desarrollador">Desarrollador</option>
           </select>
         </div>
 
