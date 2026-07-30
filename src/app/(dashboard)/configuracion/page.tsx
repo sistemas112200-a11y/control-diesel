@@ -28,6 +28,7 @@ const ROL_LABEL: Record<RolUsuario, string> = {
   contabilidad: 'Contabilidad',
   auditor: 'Auditor',
   guardia: 'Guardia',
+  desarrollador: 'Desarrollador',
 }
 
 export default async function ConfiguracionPage() {
