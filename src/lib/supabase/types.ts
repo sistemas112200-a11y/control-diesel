@@ -9,7 +9,8 @@ export type TipoAlerta =
 export type SeveridadAlerta = 'info' | 'advertencia' | 'critica'
 export type EstadoAlerta = 'nueva' | 'revisada' | 'descartada'
 export type TipoMantenimiento = 'preventivo' | 'correctivo'
-export type EstadoReporte = 'abierto' | 'en_proceso' | 'resuelto'
+export type EstadoReporte = 'abierta' | 'asignada' | 'en_proceso' | 'espera_refacciones' | 'completada'
+export type PrioridadOrden = 'alta' | 'media' | 'baja'
 
 export interface Empresa {
   id: string
@@ -200,6 +201,8 @@ export interface ReporteUnidad {
   vehiculo_id: string
   descripcion: string
   estado: EstadoReporte
+  prioridad: PrioridadOrden
+  mantenimiento_id: string | null
   tomado_por: string | null
   operador_id: string | null
   posible_falla: string | null

@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { ReporteUnidad, RefaccionReporte } from '@/lib/supabase/types'
+import type { ReporteUnidad, RefaccionReporte, EstadoReporte, PrioridadOrden } from '@/lib/supabase/types'
 
 export async function getReportes(supabase: SupabaseClient) {
   const { data, error } = await supabase
@@ -46,10 +46,53 @@ export async function crearReporte(supabase: SupabaseClient, input: {
   return data as ReporteUnidad
 }
 
+// Crea una orden automática a partir de un mantenimiento vencido.
+// Si ya existe una orden sin completar para ese mantenimiento, no hace nada (evita duplicados).
+export async function crearOrdenDesdeMantenimiento(supabase: SupabaseClient, input: {
+  terminal_id: string
+  vehiculo_id: string
+  mantenimiento_id: string
+  descripcion: string
+}) {
+  const { data: existente } = await supabase
+    .from('reportes_unidad')
+    .select('id')
+    .eq('mantenimiento_id', input.mantenimiento_id)
+    .neq('estado', 'completada')
+    .is('deleted_at', null)
+    .maybeSingle()
+
+  if (existente) return
+
+  const { error } = await supabase.from('reportes_unidad').insert({
+    terminal_id: input.terminal_id,
+    vehiculo_id: input.vehiculo_id,
+    mantenimiento_id: input.mantenimiento_id,
+    descripcion: input.descripcion,
+    estado: 'abierta',
+    prioridad: 'alta',
+  })
+
+  // Si otro usuario la creó al mismo tiempo, el índice único la rechaza — lo ignoramos.
+  if (error && error.code !== '23505') throw error
+}
+
+const TRANSICIONES_PERMITIDAS: Record<EstadoReporte, EstadoReporte[]> = {
+  abierta: ['asignada'],
+  asignada: ['en_proceso', 'abierta'],
+  en_proceso: ['espera_refacciones', 'asignada'],
+  espera_refacciones: ['en_proceso'],
+  completada: [],
+}
+
+export function transicionesPermitidas(estado: EstadoReporte): EstadoReporte[] {
+  return TRANSICIONES_PERMITIDAS[estado]
+}
+
 export async function tomarReporte(supabase: SupabaseClient, id: string, usuarioId: string) {
   const { data, error } = await supabase
     .from('reportes_unidad')
-    .update({ estado: 'en_proceso', tomado_por: usuarioId })
+    .update({ estado: 'asignada', tomado_por: usuarioId })
     .eq('id', id)
     .select('vehiculo_id')
     .single()
@@ -64,6 +107,24 @@ export async function tomarReporte(supabase: SupabaseClient, id: string, usuario
   if (errorVehiculo) throw errorVehiculo
 }
 
+export async function cambiarEstadoOrden(supabase: SupabaseClient, id: string, nuevoEstado: EstadoReporte) {
+  const { error } = await supabase
+    .from('reportes_unidad')
+    .update({ estado: nuevoEstado })
+    .eq('id', id)
+
+  if (error) throw error
+}
+
+export async function cambiarPrioridadOrden(supabase: SupabaseClient, id: string, prioridad: PrioridadOrden) {
+  const { error } = await supabase
+    .from('reportes_unidad')
+    .update({ prioridad })
+    .eq('id', id)
+
+  if (error) throw error
+}
+
 export async function resolverReporte(supabase: SupabaseClient, id: string, input: {
   posible_falla: string
   solucion: string
@@ -72,7 +133,7 @@ export async function resolverReporte(supabase: SupabaseClient, id: string, inpu
   const { data, error } = await supabase
     .from('reportes_unidad')
     .update({
-      estado: 'resuelto',
+      estado: 'completada',
       posible_falla: input.posible_falla,
       solucion: input.solucion,
       firma_url: input.firma_url,
