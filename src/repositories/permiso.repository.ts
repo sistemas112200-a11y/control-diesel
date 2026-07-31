@@ -3,8 +3,8 @@ import type { RolUsuario } from '@/lib/supabase/types'
 import type { ModuloVista } from '@/lib/auth/permissions'
 
 const TODOS_LOS_MODULOS: ModuloVista[] = [
-  'dashboard', 'vehiculos', 'operadores', 'cargas', 'alertas',
-  'reportes', 'usuarios', 'configuracion', 'mantenimientos', 'reportes_unidad', 'pases_salida',
+  'dashboard', 'vehiculos', 'operadores', 'mecanicos', 'cargas', 'alertas',
+  'reportes', 'usuarios', 'configuracion', 'mantenimientos', 'reportes_unidad', 'pases_salida', 'almacen',
 ]
 
 export async function getModulosVisibles(supabase: SupabaseClient, rol: RolUsuario, empresaId: string): Promise<Set<ModuloVista>> {
