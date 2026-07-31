@@ -237,3 +237,16 @@ export interface PaseSalida {
   created_at: string
   deleted_at: string | null
 }
+
+export type TipoAviso = 'info' | 'advertencia' | 'critica'
+
+export interface Aviso {
+  id: string
+  empresa_id: string | null
+  mensaje: string
+  tipo: TipoAviso
+  activo: boolean
+  expira_at: string | null
+  created_by: string | null
+  created_at: string
+}
