@@ -185,6 +185,8 @@ export interface Mantenimiento {
   kilometraje: number
   intervalo_km: number | null
   intervalo_dias: number | null
+  aviso_km: number | null
+  aviso_dias: number | null
   fecha: string
   created_by: string | null
   created_at: string

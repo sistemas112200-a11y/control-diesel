@@ -1,11 +1,23 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getMantenimientos } from '@/repositories/mantenimiento.repository'
-import { estaVencido } from '@/lib/mantenimiento-estado'
+import { estaVencido, kmRestantes, diasRestantes } from '@/lib/mantenimiento-estado'
 
 const TIPO_LABEL: Record<string, string> = {
   preventivo: 'Preventivo',
   correctivo: 'Correctivo',
+}
+
+function textoKm(valor: number | null): string {
+  if (valor == null) return '—'
+  if (valor <= 0) return 'Vencido'
+  return `${valor.toLocaleString('es-MX')} km`
+}
+
+function textoDias(valor: number | null): string {
+  if (valor == null) return '—'
+  if (valor <= 0) return 'Vencido'
+  return `${valor} días`
 }
 
 export default async function MantenimientosPage({
@@ -44,6 +56,8 @@ export default async function MantenimientosPage({
               <th className="text-left px-4 py-3">Kilometraje</th>
               <th className="text-left px-4 py-3">Cada cuántos km</th>
               <th className="text-left px-4 py-3">Cada cuántos días</th>
+              <th className="text-left px-4 py-3">Faltan (km)</th>
+              <th className="text-left px-4 py-3">Faltan (días)</th>
               <th className="text-left px-4 py-3">Descripción</th>
               <th className="text-left px-4 py-3">Estado</th>
               <th className="text-left px-4 py-3"></th>
@@ -52,13 +66,16 @@ export default async function MantenimientosPage({
           <tbody className="divide-y divide-slate-100">
             {mantenimientos.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={10} className="px-4 py-8 text-center text-slate-500">
                   Aún no hay mantenimientos registrados.
                 </td>
               </tr>
             ) : (
               mantenimientos.map((m) => {
-                const vencido = m.vehiculos ? estaVencido(m, m.vehiculos.km_actual) : false
+                const kmActual = m.vehiculos?.km_actual ?? 0
+                const vencido = m.vehiculos ? estaVencido(m, kmActual) : false
+                const km = m.vehiculos ? kmRestantes(m, kmActual) : null
+                const dias = diasRestantes(m)
                 return (
                   <tr key={m.id}>
                     <td className="px-4 py-3 font-medium text-slate-900">{m.vehiculos?.numero_economico ?? '—'}</td>
@@ -66,6 +83,8 @@ export default async function MantenimientosPage({
                     <td className="px-4 py-3 text-slate-600">{m.kilometraje} km</td>
                     <td className="px-4 py-3 text-slate-600">{m.intervalo_km ? `${m.intervalo_km} km` : '—'}</td>
                     <td className="px-4 py-3 text-slate-600">{m.intervalo_dias ? `${m.intervalo_dias} días` : '—'}</td>
+                    <td className="px-4 py-3 text-slate-600">{textoKm(km)}</td>
+                    <td className="px-4 py-3 text-slate-600">{textoDias(dias)}</td>
                     <td className="px-4 py-3 text-slate-600">{m.descripcion}</td>
                     <td className="px-4 py-3">
                       <span className={`rounded-full px-2 py-1 text-xs font-medium ${vencido ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>

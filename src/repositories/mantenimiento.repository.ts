@@ -38,6 +38,16 @@ export async function getMantenimientoById(supabase: SupabaseClient, id: string)
   return data as Mantenimiento
 }
 
+export async function getMantenimientosVencidosYProximos(supabase: SupabaseClient) {
+  const { data, error } = await supabase
+    .from('mantenimientos')
+    .select('*, vehiculos(numero_economico, km_actual)')
+    .is('deleted_at', null)
+
+  if (error) throw error
+  return data as (Mantenimiento & { vehiculos: { numero_economico: string; km_actual: number } | null })[]
+}
+
 export async function crearMantenimiento(supabase: SupabaseClient, input: {
   terminal_id: string
   vehiculo_id: string
@@ -46,6 +56,8 @@ export async function crearMantenimiento(supabase: SupabaseClient, input: {
   kilometraje: number
   intervalo_km: number | null
   intervalo_dias: number | null
+  aviso_km: number | null
+  aviso_dias: number | null
   created_by: string
 }) {
   const { data, error } = await supabase
@@ -64,6 +76,8 @@ export async function actualizarMantenimiento(supabase: SupabaseClient, id: stri
   kilometraje: number
   intervalo_km: number | null
   intervalo_dias: number | null
+  aviso_km: number | null
+  aviso_dias: number | null
 }) {
   const { error } = await supabase
     .from('mantenimientos')

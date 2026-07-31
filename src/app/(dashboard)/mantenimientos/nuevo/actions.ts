@@ -39,6 +39,11 @@ export async function crearMantenimientoAction(formData: FormData) {
       throw new Error('Indica cada cuántos km o cada cuántos días le toca este mantenimiento')
     }
 
+    const avisoKmRaw = formData.get('aviso_km') as string
+    const avisoDiasRaw = formData.get('aviso_dias') as string
+    const aviso_km = avisoKmRaw ? Number(avisoKmRaw) : null
+    const aviso_dias = avisoDiasRaw ? Number(avisoDiasRaw) : null
+
     const supabase = await createClient()
     const vehiculo = await getVehiculoById(supabase, vehiculoId)
 
@@ -50,6 +55,8 @@ export async function crearMantenimientoAction(formData: FormData) {
       kilometraje,
       intervalo_km,
       intervalo_dias,
+      aviso_km,
+      aviso_dias,
       created_by: usuario.id,
     })
   } catch (error) {
