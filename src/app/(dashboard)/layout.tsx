@@ -5,6 +5,7 @@ import { Header } from '@/components/layout/header'
 import { getModulosVisibles } from '@/repositories/permiso.repository'
 import { getMantenimientosVencidosYProximos } from '@/repositories/mantenimiento.repository'
 import { estaVencido, estaProximo } from '@/lib/mantenimiento-estado'
+import { crearOrdenDesdeMantenimiento } from '@/repositories/reporte.repository'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -43,6 +44,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
           id: m.id,
           mensaje: `${m.descripcion} — unidad ${m.vehiculos.numero_economico}`,
           tipo: 'vencido',
+        })
+
+        await crearOrdenDesdeMantenimiento(supabase, {
+          terminal_id: m.terminal_id,
+          vehiculo_id: m.vehiculo_id,
+          mantenimiento_id: m.id,
+          descripcion: `Mantenimiento vencido: ${m.descripcion}`,
         })
       } else if (estaProximo(m, kmActual)) {
         alertasMantenimiento.push({
