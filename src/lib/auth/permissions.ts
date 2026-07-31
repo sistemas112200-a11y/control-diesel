@@ -1,6 +1,6 @@
 import type { RolUsuario } from '@/lib/supabase/types'
 
-type Modulo = 'vehiculos' | 'operadores' | 'cargas' | 'compras' | 'vales' | 'usuarios' | 'alertas' | 'reportes_unidad' | 'pases_salida'
+type Modulo = 'vehiculos' | 'operadores' | 'mecanicos' | 'cargas' | 'compras' | 'vales' | 'usuarios' | 'alertas' | 'reportes_unidad' | 'pases_salida'
 type Accion = 'crear' | 'editar' | 'eliminar'
 
 const PERMISOS: Record<Modulo, Record<Accion, RolUsuario[]>> = {
@@ -10,6 +10,11 @@ const PERMISOS: Record<Modulo, Record<Accion, RolUsuario[]>> = {
     eliminar: ['administrador'],
   },
   operadores: {
+    crear: ['administrador', 'supervisor'],
+    editar: ['administrador', 'supervisor'],
+    eliminar: ['administrador'],
+  },
+  mecanicos: {
     crear: ['administrador', 'supervisor'],
     editar: ['administrador', 'supervisor'],
     eliminar: ['administrador'],
@@ -63,6 +68,7 @@ export type ModuloVista =
   | 'dashboard'
   | 'vehiculos'
   | 'operadores'
+  | 'mecanicos'
   | 'cargas'
   | 'alertas'
   | 'reportes'
@@ -76,6 +82,7 @@ const VISTA_POR_ROL: Record<ModuloVista, RolUsuario[]> = {
   dashboard: ['administrador', 'supervisor', 'contabilidad', 'auditor'],
   vehiculos: ['administrador', 'supervisor', 'capturista', 'auditor'],
   operadores: ['administrador', 'supervisor', 'auditor'],
+  mecanicos: ['administrador', 'supervisor'],
   cargas: ['administrador', 'supervisor', 'capturista', 'operador', 'contabilidad', 'auditor'],
   alertas: ['administrador', 'supervisor', 'auditor'],
   reportes: ['administrador', 'supervisor', 'contabilidad', 'auditor'],

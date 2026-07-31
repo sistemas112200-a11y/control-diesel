@@ -95,6 +95,18 @@ export interface Operador {
   deleted_at: string | null
 }
 
+export interface Mecanico {
+  id: string
+  empresa_id: string
+  nombre_completo: string
+  telefono: string | null
+  especialidad: string | null
+  activo: boolean
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
 export interface ValeCombustible {
   id: string
   folio: string
@@ -203,6 +215,7 @@ export interface ReporteUnidad {
   estado: EstadoReporte
   prioridad: PrioridadOrden
   mantenimiento_id: string | null
+  mecanico_id: string | null
   tomado_por: string | null
   operador_id: string | null
   posible_falla: string | null

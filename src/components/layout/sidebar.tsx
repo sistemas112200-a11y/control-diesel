@@ -3,7 +3,6 @@
 import { useState, useEffect, type ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X } from 'lucide-react'
 import type { ModuloVista } from '@/lib/auth/permissions'
 
 type Item = { href: string; label: string; modulo: ModuloVista }
@@ -25,7 +24,8 @@ const ITEMS_DIESEL: Item[] = [
 
 const ITEMS_TALLER: Item[] = [
   { href: '/mantenimientos', label: 'Mantenimientos', modulo: 'mantenimientos' },
-  { href: '/reportes-unidad', label: 'Reportes de unidad', modulo: 'reportes_unidad' },
+  { href: '/reportes-unidad', label: 'Órdenes de trabajo', modulo: 'reportes_unidad' },
+  { href: '/mecanicos', label: 'Mecánicos', modulo: 'mecanicos' },
 ]
 
 const ITEMS_FINALES: Item[] = [
@@ -77,7 +77,6 @@ function Grupo({
 
 export function Sidebar({ modulosVisibles }: { modulosVisibles: ModuloVista[] }) {
   const pathname = usePathname()
-  const [abierto, setAbierto] = useState(true)
   const visibles = new Set(modulosVisibles)
 
   const itemsPrincipales = ITEMS_PRINCIPALES.filter((item) => visibles.has(item.modulo))
@@ -104,34 +103,18 @@ export function Sidebar({ modulosVisibles }: { modulosVisibles: ModuloVista[] })
   }
 
   return (
-    <>
-      <button
-        type="button"
-        onClick={() => setAbierto((v) => !v)}
-        aria-label={abierto ? 'Ocultar menú' : 'Mostrar menú'}
-        className="fixed top-4 z-50 flex items-center justify-center w-8 h-8 rounded-md bg-sidebar text-white shadow-md transition-all duration-200"
-        style={{ left: abierto ? '216px' : '8px' }}
-      >
-        {abierto ? <X size={16} /> : <Menu size={16} />}
-      </button>
-
-      <aside
-        className={`shrink-0 bg-sidebar min-h-screen flex flex-col overflow-hidden transition-all duration-200 ${
-          abierto ? 'w-56 py-4' : 'w-0 py-0'
-        }`}
-      >
-        <div className="px-4 mb-6 flex items-center gap-2 whitespace-nowrap">
-          <img src="/logo-icon.svg" alt="FlotaTotal" className="w-7 h-7 rounded-lg shrink-0" />
-          <span className="text-white font-semibold text-sm">FlotaTotal</span>
-        </div>
-        <nav className="flex-1 px-2 space-y-1 whitespace-nowrap">
-          {itemsPrincipales.map(renderLink)}
-          <Grupo titulo="Altas" items={itemsAltas} pathname={pathname} renderLink={renderLink} />
-          <Grupo titulo="Diésel" items={itemsDiesel} pathname={pathname} renderLink={renderLink} />
-          <Grupo titulo="Taller" items={itemsTaller} pathname={pathname} renderLink={renderLink} />
-          {itemsFinales.map(renderLink)}
-        </nav>
-      </aside>
-    </>
+    <aside className="w-56 shrink-0 bg-sidebar min-h-screen flex flex-col py-4">
+      <div className="px-4 mb-6 flex items-center gap-2">
+        <img src="/logo-icon.svg" alt="FlotaTotal" className="w-7 h-7 rounded-lg" />
+        <span className="text-white font-semibold text-sm">FlotaTotal</span>
+      </div>
+      <nav className="flex-1 px-2 space-y-1">
+        {itemsPrincipales.map(renderLink)}
+        <Grupo titulo="Altas" items={itemsAltas} pathname={pathname} renderLink={renderLink} />
+        <Grupo titulo="Diésel" items={itemsDiesel} pathname={pathname} renderLink={renderLink} />
+        <Grupo titulo="Taller" items={itemsTaller} pathname={pathname} renderLink={renderLink} />
+        {itemsFinales.map(renderLink)}
+      </nav>
+    </aside>
   )
 }
