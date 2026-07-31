@@ -28,6 +28,10 @@ const ITEMS_TALLER: Item[] = [
   { href: '/mecanicos', label: 'Mecánicos', modulo: 'mecanicos' },
 ]
 
+const ITEMS_ALMACEN: Item[] = [
+  { href: '/almacen/productos', label: 'Productos', modulo: 'almacen' },
+]
+
 const ITEMS_FINALES: Item[] = [
   { href: '/pases-salida', label: 'Pases de salida', modulo: 'pases_salida' },
   { href: '/usuarios', label: 'Usuarios', modulo: 'usuarios' },
@@ -83,6 +87,7 @@ export function Sidebar({ modulosVisibles }: { modulosVisibles: ModuloVista[] })
   const itemsAltas = ITEMS_ALTAS.filter((item) => visibles.has(item.modulo))
   const itemsDiesel = ITEMS_DIESEL.filter((item) => visibles.has(item.modulo))
   const itemsTaller = ITEMS_TALLER.filter((item) => visibles.has(item.modulo))
+  const itemsAlmacen = ITEMS_ALMACEN.filter((item) => visibles.has(item.modulo))
   const itemsFinales = ITEMS_FINALES.filter((item) => visibles.has(item.modulo))
 
   function renderLink(item: Item) {
@@ -113,6 +118,7 @@ export function Sidebar({ modulosVisibles }: { modulosVisibles: ModuloVista[] })
         <Grupo titulo="Altas" items={itemsAltas} pathname={pathname} renderLink={renderLink} />
         <Grupo titulo="Diésel" items={itemsDiesel} pathname={pathname} renderLink={renderLink} />
         <Grupo titulo="Taller" items={itemsTaller} pathname={pathname} renderLink={renderLink} />
+        <Grupo titulo="Almacén" items={itemsAlmacen} pathname={pathname} renderLink={renderLink} />
         {itemsFinales.map(renderLink)}
       </nav>
     </aside>

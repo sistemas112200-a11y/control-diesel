@@ -268,3 +268,43 @@ export interface Aviso {
   created_by: string | null
   created_at: string
 }
+
+export type EstadoSalida = 'abierta' | 'cerrada'
+
+export interface Producto {
+  id: string
+  empresa_id: string
+  codigo: string
+  nombre: string
+  descripcion: string | null
+  unidad_medida: string
+  existencia: number
+  stock_minimo: number | null
+  activo: boolean
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export interface SalidaAlmacen {
+  id: string
+  terminal_id: string
+  vehiculo_id: string
+  mecanico_id: string | null
+  estado: EstadoSalida
+  folio: string
+  firma_url: string | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  cerrada_at: string | null
+  deleted_at: string | null
+}
+
+export interface SalidaDetalle {
+  id: string
+  salida_id: string
+  producto_id: string
+  cantidad: number
+  created_at: string
+}
