@@ -2,19 +2,16 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getReporteById, getRefaccionesPorReporte } from '@/repositories/reporte.repository'
 import { FirmaPad } from '@/components/ui/firma-pad'
-import { tomarReporteAction, resolverReporteAction, agregarRefaccionAction } from './actions'
-
-const ESTADO_LABEL: Record<string, string> = {
-  abierto: 'Abierto',
-  en_proceso: 'En proceso',
-  resuelto: 'Resuelto',
-}
-
-const ESTADO_COLOR: Record<string, string> = {
-  abierto: 'bg-red-100 text-red-700',
-  en_proceso: 'bg-amber-100 text-amber-700',
-  resuelto: 'bg-green-100 text-green-700',
-}
+import { OrdenPrioridad } from '@/components/ui/orden-prioridad'
+import { ESTADO_LABEL, ESTADO_COLOR } from '@/lib/ordenes-trabajo'
+import {
+  tomarReporteAction,
+  iniciarTrabajoAction,
+  pausarPorRefaccionesAction,
+  reanudarTrabajoAction,
+  resolverReporteAction,
+  agregarRefaccionAction,
+} from './actions'
 
 export default async function ReporteDetallePage({
   params,
@@ -37,7 +34,7 @@ export default async function ReporteDetallePage({
       <div className="flex items-center justify-between">
         <div>
           <Link href="/reportes-unidad" className="text-xs font-medium text-brand-dark hover:underline">
-            Volver a Reportes de unidad
+            Volver a Ordenes de trabajo
           </Link>
           <h1 className="text-lg font-semibold text-slate-900 mt-1">
             {reporte.folio} - {reporte.vehiculos?.numero_economico ?? '-'}
@@ -46,12 +43,7 @@ export default async function ReporteDetallePage({
             <p className="text-sm text-slate-500">Reportado por: {reporte.operadores.nombre_completo}</p>
           )}
         </div>
-        <a
-          href={pdfHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="rounded-md border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-medium px-4 py-2 transition-colors"
-        >
+        <a href={pdfHref} target="_blank" rel="noopener noreferrer" className="rounded-md border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-medium px-4 py-2 transition-colors">
           Descargar PDF
         </a>
       </div>
@@ -62,56 +54,74 @@ export default async function ReporteDetallePage({
 
       <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-3">
         <div className="flex items-center justify-between">
-          <span className={`rounded-full px-2 py-1 text-xs font-medium ${ESTADO_COLOR[reporte.estado]}`}>
-            {ESTADO_LABEL[reporte.estado]}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className={`rounded-full px-2 py-1 text-xs font-medium ${ESTADO_COLOR[reporte.estado]}`}>
+              {ESTADO_LABEL[reporte.estado]}
+            </span>
+            <OrdenPrioridad id={reporte.id} prioridad={reporte.prioridad} />
+          </div>
           <span className="text-xs text-slate-500">{new Date(reporte.created_at).toLocaleString('es-MX')}</span>
         </div>
         <p className="text-sm text-slate-700">{reporte.descripcion}</p>
 
-        {reporte.estado === 'abierto' && (
+        {reporte.estado === 'abierta' && (
           <form action={tomarReporteAction}>
             <input type="hidden" name="id" value={reporte.id} />
             <button type="submit" className="rounded-md bg-brand hover:bg-brand-dark text-white text-sm font-medium px-4 py-2 transition-colors">
-              Tomar este reporte
+              Tomar esta orden
+            </button>
+          </form>
+        )}
+
+        {reporte.estado === 'asignada' && (
+          <form action={iniciarTrabajoAction}>
+            <input type="hidden" name="id" value={reporte.id} />
+            <button type="submit" className="rounded-md bg-brand hover:bg-brand-dark text-white text-sm font-medium px-4 py-2 transition-colors">
+              Iniciar trabajo
             </button>
           </form>
         )}
 
         {reporte.estado === 'en_proceso' && (
+          <form action={pausarPorRefaccionesAction}>
+            <input type="hidden" name="id" value={reporte.id} />
+            <button type="submit" className="rounded-md border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-medium px-4 py-2 transition-colors">
+              Pausar (esperando refacciones)
+            </button>
+          </form>
+        )}
+
+        {reporte.estado === 'espera_refacciones' && (
+          <form action={reanudarTrabajoAction}>
+            <input type="hidden" name="id" value={reporte.id} />
+            <button type="submit" className="rounded-md bg-brand hover:bg-brand-dark text-white text-sm font-medium px-4 py-2 transition-colors">
+              Reanudar trabajo
+            </button>
+          </form>
+        )}
+
+        {(reporte.estado === 'en_proceso' || reporte.estado === 'espera_refacciones') && (
           <form action={resolverReporteAction} className="space-y-4 pt-2 border-t border-slate-100">
             <input type="hidden" name="id" value={reporte.id} />
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Posible falla</label>
-              <textarea
-                name="posible_falla"
-                rows={2}
-                required
-                placeholder="Ej. Valvula de la llanta danada"
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-              />
+              <textarea name="posible_falla" rows={2} required placeholder="Ej. Valvula de la llanta danada" className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Falla reparada</label>
-              <textarea
-                name="solucion"
-                rows={2}
-                required
-                placeholder="Ej. Se cambio la llanta delantera derecha"
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-              />
+              <textarea name="solucion" rows={2} required placeholder="Ej. Se cambio la llanta delantera derecha" className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Firma del mecanico</label>
               <FirmaPad name="firma_url" />
             </div>
             <button type="submit" className="rounded-md bg-brand hover:bg-brand-dark text-white text-sm font-medium px-4 py-2 transition-colors">
-              Marcar como resuelto
+              Marcar como completada
             </button>
           </form>
         )}
 
-        {reporte.estado === 'resuelto' && (
+        {reporte.estado === 'completada' && (
           <div className="pt-2 border-t border-slate-100 space-y-3">
             {reporte.posible_falla && (
               <div>
@@ -133,10 +143,7 @@ export default async function ReporteDetallePage({
             )}
             <div className="pt-2">
               <p className="text-sm text-slate-600 mb-2">La unidad ya regreso a estado Activo.</p>
-              <Link
-                href={paseSalidaHref}
-                className="inline-block rounded-md bg-brand hover:bg-brand-dark text-white text-sm font-medium px-4 py-2 transition-colors"
-              >
+              <Link href={paseSalidaHref} className="inline-block rounded-md bg-brand hover:bg-brand-dark text-white text-sm font-medium px-4 py-2 transition-colors">
                 Generar pase de salida
               </Link>
             </div>
@@ -202,5 +209,3 @@ export default async function ReporteDetallePage({
     </div>
   )
 }
-
-

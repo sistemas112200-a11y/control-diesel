@@ -3,14 +3,20 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { tomarReporte, resolverReporte, crearRefaccion, getReporteById } from '@/repositories/reporte.repository'
+import {
+  tomarReporte,
+  cambiarEstadoOrden,
+  resolverReporte,
+  crearRefaccion,
+  getReporteById,
+} from '@/repositories/reporte.repository'
 import { getUsuarioActual } from '@/lib/auth/session'
 import { puede } from '@/lib/auth/permissions'
 
 export async function tomarReporteAction(formData: FormData) {
   const usuario = await getUsuarioActual()
   if (!usuario || !puede(usuario.rol, 'reportes_unidad', 'editar')) {
-    throw new Error('No tienes permiso para tomar reportes')
+    throw new Error('No tienes permiso para tomar órdenes de trabajo')
   }
 
   const id = formData.get('id') as string
@@ -21,10 +27,52 @@ export async function tomarReporteAction(formData: FormData) {
   revalidatePath('/reportes-unidad')
 }
 
+export async function iniciarTrabajoAction(formData: FormData) {
+  const usuario = await getUsuarioActual()
+  if (!usuario || !puede(usuario.rol, 'reportes_unidad', 'editar')) {
+    throw new Error('No tienes permiso para iniciar el trabajo')
+  }
+
+  const id = formData.get('id') as string
+  const supabase = await createClient()
+  await cambiarEstadoOrden(supabase, id, 'en_proceso')
+
+  revalidatePath(`/reportes-unidad/${id}`)
+  revalidatePath('/reportes-unidad')
+}
+
+export async function pausarPorRefaccionesAction(formData: FormData) {
+  const usuario = await getUsuarioActual()
+  if (!usuario || !puede(usuario.rol, 'reportes_unidad', 'editar')) {
+    throw new Error('No tienes permiso para pausar esta orden')
+  }
+
+  const id = formData.get('id') as string
+  const supabase = await createClient()
+  await cambiarEstadoOrden(supabase, id, 'espera_refacciones')
+
+  revalidatePath(`/reportes-unidad/${id}`)
+  revalidatePath('/reportes-unidad')
+}
+
+export async function reanudarTrabajoAction(formData: FormData) {
+  const usuario = await getUsuarioActual()
+  if (!usuario || !puede(usuario.rol, 'reportes_unidad', 'editar')) {
+    throw new Error('No tienes permiso para reanudar esta orden')
+  }
+
+  const id = formData.get('id') as string
+  const supabase = await createClient()
+  await cambiarEstadoOrden(supabase, id, 'en_proceso')
+
+  revalidatePath(`/reportes-unidad/${id}`)
+  revalidatePath('/reportes-unidad')
+}
+
 export async function resolverReporteAction(formData: FormData) {
   const usuario = await getUsuarioActual()
   if (!usuario || !puede(usuario.rol, 'reportes_unidad', 'editar')) {
-    throw new Error('No tienes permiso para resolver reportes')
+    throw new Error('No tienes permiso para resolver órdenes de trabajo')
   }
 
   const id = formData.get('id') as string
