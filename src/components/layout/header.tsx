@@ -1,13 +1,21 @@
 import { LogOut } from 'lucide-react'
 import { logoutAction } from '@/lib/auth/actions'
+import { CampanitaNotificaciones } from '@/components/ui/campanita-notificaciones'
+
+interface AlertaMantenimiento {
+  id: string
+  mensaje: string
+  tipo: 'vencido' | 'proximo'
+}
 
 interface HeaderProps {
   nombreCompleto: string
   rol: string
   terminalNombre: string
+  alertas?: AlertaMantenimiento[]
 }
 
-export function Header({ nombreCompleto, rol, terminalNombre }: HeaderProps) {
+export function Header({ nombreCompleto, rol, terminalNombre, alertas = [] }: HeaderProps) {
   const iniciales = nombreCompleto
     .split(' ')
     .map((p) => p[0])
@@ -19,6 +27,7 @@ export function Header({ nombreCompleto, rol, terminalNombre }: HeaderProps) {
     <header className="h-14 border-b border-slate-200 bg-white flex items-center justify-between px-6">
       <span className="text-sm text-slate-500">{terminalNombre}</span>
       <div className="flex items-center gap-3">
+        <CampanitaNotificaciones alertas={alertas} />
         <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 text-xs font-medium flex items-center justify-center">
           {iniciales}
         </div>
