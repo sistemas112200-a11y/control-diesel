@@ -19,7 +19,7 @@ export function Header({ nombreCompleto, rol, terminalNombre }: HeaderProps) {
     <header className="h-14 border-b border-slate-200 bg-white flex items-center justify-between px-6">
       <span className="text-sm text-slate-500">{terminalNombre}</span>
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-green-100 text-green-700 text-xs font-medium flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 text-xs font-medium flex items-center justify-center">
           {iniciales}
         </div>
         <div className="text-sm">

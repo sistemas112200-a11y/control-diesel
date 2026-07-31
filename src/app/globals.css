@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 @theme {
-  --color-sidebar: #0f172a;
-  --color-sidebar-hover: #1e293b;
-  --color-brand: #22c55e;
-  --color-brand-dark: #16a34a;
+  --color-sidebar: #042c53;
+  --color-sidebar-hover: #0c447c;
+  --color-brand: #378add;
+  --color-brand-dark: #185fa5;
   --color-status-optimo: #22c55e;
   --color-status-observacion: #eab308;
   --color-status-advertencia: #f97316;
