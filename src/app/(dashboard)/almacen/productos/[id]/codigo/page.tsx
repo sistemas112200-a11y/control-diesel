@@ -26,12 +26,18 @@ export default async function CodigoProductoPage({
         </div>
       )}
 
-      <h1 className="text-lg font-semibold text-slate-900">Código de barras</h1>
-      <p className="text-sm text-slate-500 print:hidden">Imprime esta etiqueta y pégala en el producto.</p>
+      <div className="print:hidden">
+        <h1 className="text-lg font-semibold text-slate-900">Código de barras</h1>
+        <p className="text-sm text-slate-500 mt-1">
+          Código: <span className="font-mono text-slate-700">{producto.codigo}</span>
+        </p>
+      </div>
 
       <BarcodeLabel codigo={producto.codigo} nombre={producto.nombre} />
 
-      <PrintButton />
+      <div className="print:hidden">
+        <PrintButton />
+      </div>
     </div>
   )
 }
