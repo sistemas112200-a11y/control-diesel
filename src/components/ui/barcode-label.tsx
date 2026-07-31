@@ -83,13 +83,6 @@ export function BarcodeLabel({ codigo, nombre }: { codigo: string; nombre: strin
 
   return (
     <div className="space-y-5">
-      <style>{`
-        @media print {
-          @page { size: ${anchoMm}mm ${altoMm}mm; margin: 0; }
-          body { margin: 0; }
-        }
-      `}</style>
-
       <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-3 print:hidden">
         <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Medidas de la etiqueta</p>
         <div className="grid grid-cols-3 gap-3">
@@ -121,7 +114,9 @@ export function BarcodeLabel({ codigo, nombre }: { codigo: string; nombre: strin
             />
           </div>
         </div>
-        <p className="text-xs text-slate-400">Ajusta las medidas según el tamaño de tus etiquetas y dale "Imprimir".</p>
+        <p className="text-xs text-slate-400">
+          Ajusta las medidas y dale "Imprimir". Si tu impresora es de etiquetas, elige el tamaño de papel de la etiqueta en el cuadro de impresión de tu navegador.
+        </p>
       </div>
 
       <div className="flex justify-center print:block">

@@ -16,3 +16,15 @@ body {
   background-color: #f8fafc;
   color: #0f172a;
 }
+
+@media print {
+  @page {
+    margin: 0;
+  }
+  .min-h-screen {
+    min-height: 0 !important;
+  }
+  main {
+    padding: 0 !important;
+  }
+}
