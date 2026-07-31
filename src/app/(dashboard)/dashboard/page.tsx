@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { getAvisosActivosParaEmpresa } from '@/repositories/aviso.repository'
+import { BannerAvisos } from '@/components/ui/banner-avisos'
 
 function inicioDeHoy() {
   const d = new Date()
@@ -23,6 +25,15 @@ function claseComparacion(real: number | null, esperado: number): string {
 
 export default async function DashboardPage() {
   const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  let avisos: Awaited<ReturnType<typeof getAvisosActivosParaEmpresa>> = []
+  if (user) {
+    const { data: perfil } = await supabase.from('usuarios').select('empresa_id').eq('id', user.id).single()
+    if (perfil) {
+      avisos = await getAvisosActivosParaEmpresa(supabase, perfil.empresa_id)
+    }
+  }
 
   const [{ data: cargasHoy }, { data: cargasMes }, { data: alertasActivas }, { data: vehiculos }, { data: rendimientosCargas }] = await Promise.all([
     supabase.from('cargas_combustible').select('litros_cargados').gte('fecha_hora', inicioDeHoy()).is('deleted_at', null),
@@ -59,6 +70,8 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      <BannerAvisos avisos={avisos} />
+
       <h1 className="text-lg font-semibold text-slate-900">Dashboard</h1>
 
       <div className="grid grid-cols-4 gap-4">
