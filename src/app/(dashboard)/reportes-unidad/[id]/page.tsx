@@ -1,8 +1,10 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getReporteById, getRefaccionesPorReporte } from '@/repositories/reporte.repository'
+import { getMecanicosActivos } from '@/repositories/mecanico.repository'
 import { FirmaPad } from '@/components/ui/firma-pad'
 import { OrdenPrioridad } from '@/components/ui/orden-prioridad'
+import { OrdenMecanico } from '@/components/ui/orden-mecanico'
 import { ESTADO_LABEL, ESTADO_COLOR } from '@/lib/ordenes-trabajo'
 import {
   tomarReporteAction,
@@ -25,6 +27,7 @@ export default async function ReporteDetallePage({
   const supabase = await createClient()
   const reporte = await getReporteById(supabase, id)
   const refacciones = await getRefaccionesPorReporte(supabase, id)
+  const mecanicos = await getMecanicosActivos(supabase)
   const totalRefacciones = refacciones.reduce((suma, r) => suma + r.cantidad * r.costo, 0)
   const pdfHref = '/reportes-unidad/' + id + '/pdf'
   const paseSalidaHref = '/unidad/' + reporte.vehiculo_id + '/pase-salida'
@@ -62,6 +65,12 @@ export default async function ReporteDetallePage({
           </div>
           <span className="text-xs text-slate-500">{new Date(reporte.created_at).toLocaleString('es-MX')}</span>
         </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-slate-500">Mecánico:</span>
+          <OrdenMecanico id={reporte.id} mecanicoId={reporte.mecanico_id} mecanicos={mecanicos} />
+        </div>
+
         <p className="text-sm text-slate-700">{reporte.descripcion}</p>
 
         {reporte.estado === 'abierta' && (

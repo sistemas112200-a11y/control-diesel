@@ -55,6 +55,9 @@ export default async function ReportesUnidadPage() {
                         <p className="text-sm font-medium text-slate-900 line-clamp-2">{r.descripcion}</p>
                         <p className="text-xs text-slate-500 mt-1">{r.vehiculos?.numero_economico ?? '—'}</p>
                         <p className="text-xs text-slate-400">{new Date(r.created_at).toLocaleDateString('es-MX')}</p>
+                        {r.mecanicos?.nombre_completo && (
+                          <p className="text-xs text-brand-dark mt-1">🔧 {r.mecanicos.nombre_completo}</p>
+                        )}
                       </Link>
                       <OrdenMover id={r.id} opciones={transicionesPermitidas(r.estado)} />
                     </div>

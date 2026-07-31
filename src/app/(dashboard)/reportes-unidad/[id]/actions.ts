@@ -9,6 +9,7 @@ import {
   resolverReporte,
   crearRefaccion,
   getReporteById,
+  asignarMecanicoOrden,
 } from '@/repositories/reporte.repository'
 import { getUsuarioActual } from '@/lib/auth/session'
 import { puede } from '@/lib/auth/permissions'
@@ -146,4 +147,21 @@ export async function agregarRefaccionAction(formData: FormData) {
   }
 
   revalidatePath(`/reportes-unidad/${id}`)
+}
+
+export async function asignarMecanicoAction(formData: FormData) {
+  const usuario = await getUsuarioActual()
+  if (!usuario || !puede(usuario.rol, 'reportes_unidad', 'editar')) {
+    throw new Error('No tienes permiso para asignar mecánico')
+  }
+
+  const id = formData.get('id') as string
+  const mecanicoIdRaw = formData.get('mecanico_id') as string
+  const mecanicoId = mecanicoIdRaw ? mecanicoIdRaw : null
+
+  const supabase = await createClient()
+  await asignarMecanicoOrden(supabase, id, mecanicoId)
+
+  revalidatePath(`/reportes-unidad/${id}`)
+  revalidatePath('/reportes-unidad')
 }
