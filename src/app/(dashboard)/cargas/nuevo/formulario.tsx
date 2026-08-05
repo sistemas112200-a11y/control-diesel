@@ -65,10 +65,6 @@ export function FormularioNuevaCarga({
         subirFoto(fotoTanque2, 'tanque2'),
       ])
 
-      if (!urlTicket || !urlKm || !urlBomba || !urlTanque1) {
-        throw new Error('Faltan fotos obligatorias por subir')
-      }
-
       const datosFinales = new FormData()
       datosFinales.set('terminal_id', datos.get('terminal_id') as string)
       datosFinales.set('vehiculo_id', vehiculoId)
@@ -79,10 +75,10 @@ export function FormularioNuevaCarga({
       datosFinales.set('precio_litro', datos.get('precio_litro') as string)
       datosFinales.set('metodo_pago', datos.get('metodo_pago') as string)
       datosFinales.set('observaciones', (datos.get('observaciones') as string) ?? '')
-      datosFinales.set('foto_ticket_url', urlTicket)
-      datosFinales.set('foto_kilometraje_url', urlKm)
-      datosFinales.set('foto_bomba_url', urlBomba)
-      datosFinales.set('foto_tanque1_url', urlTanque1)
+      if (urlTicket) datosFinales.set('foto_ticket_url', urlTicket)
+      if (urlKm) datosFinales.set('foto_kilometraje_url', urlKm)
+      if (urlBomba) datosFinales.set('foto_bomba_url', urlBomba)
+      if (urlTanque1) datosFinales.set('foto_tanque1_url', urlTanque1)
       if (urlTanque2) datosFinales.set('foto_tanque2_url', urlTanque2)
 
       await crearCargaAction(datosFinales)
@@ -138,12 +134,12 @@ export function FormularioNuevaCarga({
         </select>
       </div>
       <div className="grid grid-cols-2 gap-4">
-        <Foto label="Foto del ticket" name="foto_ticket" required />
-        <Foto label="Foto del kilometraje" name="foto_kilometraje" required />
+        <Foto label="Foto del ticket (opcional)" name="foto_ticket" />
+        <Foto label="Foto del kilometraje (opcional)" name="foto_kilometraje" />
       </div>
       <div className="grid grid-cols-2 gap-4">
-        <Foto label="Foto de la bomba" name="foto_bomba" required />
-        <Foto label="Foto del tanque 1" name="foto_tanque1" required />
+        <Foto label="Foto de la bomba (opcional)" name="foto_bomba" />
+        <Foto label="Foto del tanque 1 (opcional)" name="foto_tanque1" />
       </div>
       <Foto label="Foto del tanque 2 (opcional)" name="foto_tanque2" />
       <div>
@@ -171,11 +167,11 @@ function Campo({ label, name, type = 'text', required = false, step }: { label: 
   )
 }
 
-function Foto({ label, name, required = false }: { label: string; name: string; required?: boolean }) {
+function Foto({ label, name }: { label: string; name: string }) {
   return (
     <div>
       <label htmlFor={name} className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
-      <input id={name} name={name} type="file" accept="image/*" capture="environment" required={required} className="w-full text-sm" />
+      <input id={name} name={name} type="file" accept="image/*" capture="environment" className="w-full text-sm" />
     </div>
   )
 }
