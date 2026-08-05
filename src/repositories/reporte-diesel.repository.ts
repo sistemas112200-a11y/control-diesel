@@ -126,6 +126,8 @@ export async function getResumenDiesel(
       gasto: v.gasto,
       rendimientoPromedio: promedio(v.rendimientos),
     }))
+    // Se ocultan las unidades sin rendimiento calculado o con rendimiento 0
+    .filter((u) => u.rendimientoPromedio != null && u.rendimientoPromedio > 0)
     .sort((a, b) => b.litros - a.litros)
 
   const porOperador: ResumenDieselOperador[] = Array.from(porOperadorMap.entries())
@@ -138,12 +140,11 @@ export async function getResumenDiesel(
     .sort((a, b) => b.cargas - a.cargas)
 
   const mejoresUnidades = [...porUnidad]
-    .filter((u) => u.rendimientoPromedio != null)
     .sort((a, b) => (b.rendimientoPromedio ?? 0) - (a.rendimientoPromedio ?? 0))
     .slice(0, 5)
 
   const mejoresOperadores = [...porOperador]
-    .filter((o) => o.rendimientoPromedio != null)
+    .filter((o) => o.rendimientoPromedio != null && o.rendimientoPromedio > 0)
     .sort((a, b) => (b.rendimientoPromedio ?? 0) - (a.rendimientoPromedio ?? 0))
     .slice(0, 5)
 
