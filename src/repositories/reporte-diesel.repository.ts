@@ -137,6 +137,8 @@ export async function getResumenDiesel(
       cargas: v.cargas,
       rendimientoPromedio: promedio(v.rendimientos),
     }))
+    // Se ocultan los operadores sin rendimiento calculado o con rendimiento 0
+    .filter((o) => o.rendimientoPromedio != null && o.rendimientoPromedio > 0)
     .sort((a, b) => b.cargas - a.cargas)
 
   const mejoresUnidades = [...porUnidad]
@@ -144,7 +146,6 @@ export async function getResumenDiesel(
     .slice(0, 5)
 
   const mejoresOperadores = [...porOperador]
-    .filter((o) => o.rendimientoPromedio != null && o.rendimientoPromedio > 0)
     .sort((a, b) => (b.rendimientoPromedio ?? 0) - (a.rendimientoPromedio ?? 0))
     .slice(0, 5)
 
