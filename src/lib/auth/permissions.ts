@@ -78,6 +78,7 @@ export type ModuloVista =
   | 'reportes_unidad'
   | 'pases_salida'
   | 'almacen'
+  | 'dashboard_diesel'
 
 const VISTA_POR_ROL: Record<ModuloVista, RolUsuario[]> = {
   dashboard: ['administrador', 'supervisor', 'contabilidad', 'auditor'],
@@ -93,6 +94,7 @@ const VISTA_POR_ROL: Record<ModuloVista, RolUsuario[]> = {
   reportes_unidad: ['administrador', 'supervisor'],
   pases_salida: ['administrador', 'supervisor', 'guardia'],
   almacen: ['administrador', 'supervisor', 'capturista', 'operador'],
+  dashboard_diesel: ['administrador', 'supervisor', 'contabilidad'],
 }
 
 export function puedeVer(rol: RolUsuario, modulo: ModuloVista): boolean {

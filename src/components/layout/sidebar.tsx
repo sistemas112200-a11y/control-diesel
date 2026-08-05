@@ -17,6 +17,7 @@ const ITEMS_ALTAS: Item[] = [
 ]
 
 const ITEMS_DIESEL: Item[] = [
+  { href: '/dashboard-diesel', label: 'Dashboard - Diésel', modulo: 'dashboard_diesel' },
   { href: '/cargas', label: 'Cargas', modulo: 'cargas' },
   { href: '/reportes', label: 'Reportes', modulo: 'reportes' },
   { href: '/alertas', label: 'Alertas', modulo: 'alertas' },
