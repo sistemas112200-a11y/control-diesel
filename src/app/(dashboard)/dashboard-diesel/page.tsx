@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { getResumenDiesel } from '@/repositories/reporte-diesel.repository'
 import { GraficaBarras } from '@/components/ui/grafica-barras'
+import { TablaUnidadesDiesel } from '@/components/ui/tabla-unidades-diesel'
+import { TablaOperadoresDiesel } from '@/components/ui/tabla-operadores-diesel'
 
 const MESES_LABEL: Record<string, string> = {
   '01': 'Ene', '02': 'Feb', '03': 'Mar', '04': 'Abr', '05': 'May', '06': 'Jun',
@@ -57,60 +59,12 @@ export default async function DashboardDieselPage() {
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           <h2 className="text-sm font-semibold text-slate-900 px-6 pt-6 pb-2">Litros y gasto por unidad</h2>
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-slate-500 text-xs uppercase">
-              <tr>
-                <th className="text-left px-4 py-2">Unidad</th>
-                <th className="text-right px-4 py-2">Litros</th>
-                <th className="text-right px-4 py-2">Gasto</th>
-                <th className="text-right px-4 py-2">Rendimiento</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {resumen.porUnidad.length === 0 ? (
-                <tr><td colSpan={4} className="px-4 py-6 text-center text-slate-400">Sin datos.</td></tr>
-              ) : (
-                resumen.porUnidad.map((u) => (
-                  <tr key={u.vehiculoId}>
-                    <td className="px-4 py-2 font-medium text-slate-900">{u.unidad}</td>
-                    <td className="px-4 py-2 text-right text-slate-600">{formatoLitros(u.litros)}</td>
-                    <td className="px-4 py-2 text-right text-slate-600">{formatoDinero(u.gasto)}</td>
-                    <td className="px-4 py-2 text-right text-slate-600">
-                      {u.rendimientoPromedio != null ? `${u.rendimientoPromedio.toFixed(2)} km/L` : '—'}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          <TablaUnidadesDiesel datos={resumen.porUnidad} />
         </div>
 
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           <h2 className="text-sm font-semibold text-slate-900 px-6 pt-6 pb-2">Rendimiento por operador</h2>
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-slate-500 text-xs uppercase">
-              <tr>
-                <th className="text-left px-4 py-2">Operador</th>
-                <th className="text-right px-4 py-2">Cargas</th>
-                <th className="text-right px-4 py-2">Rendimiento</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {resumen.porOperador.length === 0 ? (
-                <tr><td colSpan={3} className="px-4 py-6 text-center text-slate-400">Sin datos.</td></tr>
-              ) : (
-                resumen.porOperador.map((o) => (
-                  <tr key={o.operadorId}>
-                    <td className="px-4 py-2 font-medium text-slate-900">{o.operador}</td>
-                    <td className="px-4 py-2 text-right text-slate-600">{o.cargas}</td>
-                    <td className="px-4 py-2 text-right text-slate-600">
-                      {o.rendimientoPromedio != null ? `${o.rendimientoPromedio.toFixed(2)} km/L` : '—'}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          <TablaOperadoresDiesel datos={resumen.porOperador} />
         </div>
       </div>
 
