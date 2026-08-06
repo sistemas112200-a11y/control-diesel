@@ -17,6 +17,7 @@ const ITEMS_ALTAS: Item[] = [
 ]
 
 const ITEMS_DIESEL: Item[] = [
+  { href: '/dashboard-diesel', label: 'Dashboard - Diésel', modulo: 'dashboard_diesel' },
   { href: '/cargas', label: 'Cargas', modulo: 'cargas' },
   { href: '/reportes', label: 'Reportes', modulo: 'reportes' },
   { href: '/alertas', label: 'Alertas', modulo: 'alertas' },
@@ -25,11 +26,13 @@ const ITEMS_DIESEL: Item[] = [
 const ITEMS_TALLER: Item[] = [
   { href: '/mantenimientos', label: 'Mantenimientos', modulo: 'mantenimientos' },
   { href: '/reportes-unidad', label: 'Órdenes de trabajo', modulo: 'reportes_unidad' },
+  { href: '/llantas', label: 'Llantas', modulo: 'llantas' },
   { href: '/mecanicos', label: 'Mecánicos', modulo: 'mecanicos' },
 ]
 
 const ITEMS_ALMACEN: Item[] = [
   { href: '/almacen/productos', label: 'Productos', modulo: 'almacen' },
+  { href: '/almacen/salidas', label: 'Salidas', modulo: 'almacen' },
 ]
 
 const ITEMS_FINALES: Item[] = [
@@ -109,9 +112,8 @@ export function Sidebar({ modulosVisibles }: { modulosVisibles: ModuloVista[] })
 
   return (
     <aside className="w-56 shrink-0 bg-sidebar min-h-screen flex flex-col py-4 print:hidden">
-      <div className="px-4 mb-6 flex items-center gap-2">
-        <img src="/logo-icon.svg" alt="FlotaTotal" className="w-7 h-7 rounded-lg" />
-        <span className="text-white font-semibold text-sm">FlotaTotal</span>
+      <div className="px-4 mb-6">
+        <span className="text-white font-semibold text-sm">Control de Diésel</span>
       </div>
       <nav className="flex-1 px-2 space-y-1">
         {itemsPrincipales.map(renderLink)}
