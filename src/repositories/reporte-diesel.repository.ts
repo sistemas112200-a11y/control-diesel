@@ -128,7 +128,8 @@ export async function getResumenDiesel(
     }))
     // Se ocultan las unidades sin rendimiento calculado o con rendimiento 0
     .filter((u) => u.rendimientoPromedio != null && u.rendimientoPromedio > 0)
-    .sort((a, b) => b.litros - a.litros)
+    // Unidades ordenadas de la más chica a la más grande (numérico, ej. T-03, T-11, ... T-67)
+    .sort((a, b) => a.unidad.localeCompare(b.unidad, undefined, { numeric: true }))
 
   const porOperador: ResumenDieselOperador[] = Array.from(porOperadorMap.entries())
     .map(([operadorId, v]) => ({
@@ -139,7 +140,8 @@ export async function getResumenDiesel(
     }))
     // Se ocultan los operadores sin rendimiento calculado o con rendimiento 0
     .filter((o) => o.rendimientoPromedio != null && o.rendimientoPromedio > 0)
-    .sort((a, b) => b.cargas - a.cargas)
+    // Operadores ordenados alfabéticamente
+    .sort((a, b) => a.operador.localeCompare(b.operador))
 
   const mejoresUnidades = [...porUnidad]
     .sort((a, b) => (b.rendimientoPromedio ?? 0) - (a.rendimientoPromedio ?? 0))
