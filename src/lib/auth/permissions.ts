@@ -1,59 +1,74 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
 import type { RolUsuario } from '@/lib/supabase/types'
-import type { ModuloVista } from '@/lib/auth/permissions'
 
-const TODOS_LOS_MODULOS: ModuloVista[] = [
-  'dashboard', 'vehiculos', 'operadores', 'mecanicos', 'cargas', 'alertas',
-  'reportes', 'usuarios', 'configuracion', 'mantenimientos', 'reportes_unidad', 'pases_salida', 'almacen',
-  'dashboard_diesel',
-]
+type Modulo = 'vehiculos' | 'operadores' | 'mecanicos' | 'cargas' | 'compras' | 'vales' | 'usuarios' | 'alertas' | 'reportes_unidad' | 'pases_salida' | 'llantas'
+type Accion = 'crear' | 'editar' | 'eliminar'
 
-export async function getModulosVisibles(supabase: SupabaseClient, rol: RolUsuario, empresaId: string): Promise<Set<ModuloVista>> {
-  let base: Set<ModuloVista>
-
-  if (rol === 'administrador') {
-    base = new Set(TODOS_LOS_MODULOS)
-  } else {
-    const { data, error } = await supabase
-      .from('permisos_vista')
-      .select('modulo, puede_ver')
-      .eq('rol', rol)
-      .eq('puede_ver', true)
-
-    if (error) throw error
-    base = new Set((data ?? []).map((row) => row.modulo as ModuloVista))
-  }
-
-  const { data: desactivados, error: errorDesactivados } = await supabase
-    .from('modulos_empresa')
-    .select('modulo')
-    .eq('empresa_id', empresaId)
-    .eq('activo', false)
-
-  if (errorDesactivados) throw errorDesactivados
-
-  const bloqueados = new Set((desactivados ?? []).map((m) => m.modulo as ModuloVista))
-  return new Set([...base].filter((m) => !bloqueados.has(m)))
+const PERMISOS: Record<Modulo, Record<Accion, RolUsuario[]>> = {
+  vehiculos: {
+    crear: ['administrador', 'supervisor'],
+    editar: ['administrador', 'supervisor'],
+    eliminar: ['administrador'],
+  },
+  operadores: {
+    crear: ['administrador', 'supervisor'],
+    editar: ['administrador', 'supervisor'],
+    eliminar: ['administrador'],
+  },
+  mecanicos: {
+    crear: ['administrador', 'supervisor'],
+    editar: ['administrador', 'supervisor'],
+    eliminar: ['administrador'],
+  },
+  cargas: {
+    crear: ['administrador', 'supervisor', 'capturista', 'operador'],
+    editar: ['administrador', 'supervisor'],
+    eliminar: ['administrador'],
+  },
+  compras: {
+    crear: ['administrador', 'supervisor', 'capturista'],
+    editar: ['administrador', 'supervisor'],
+    eliminar: ['administrador'],
+  },
+  vales: {
+    crear: ['administrador', 'supervisor', 'capturista'],
+    editar: ['administrador', 'supervisor'],
+    eliminar: ['administrador'],
+  },
+  usuarios: {
+    crear: ['administrador'],
+    editar: ['administrador'],
+    eliminar: ['administrador'],
+  },
+  alertas: {
+    crear: ['administrador', 'supervisor'],
+    editar: ['administrador', 'supervisor'],
+    eliminar: ['administrador'],
+  },
+  reportes_unidad: {
+    crear: ['administrador', 'supervisor', 'capturista', 'operador'],
+    editar: ['administrador', 'supervisor'],
+    eliminar: ['administrador'],
+  },
+  pases_salida: {
+    crear: ['administrador', 'supervisor', 'guardia'],
+    editar: ['administrador', 'supervisor'],
+    eliminar: ['administrador'],
+  },
+  llantas: {
+    crear: ['administrador', 'supervisor', 'capturista'],
+    editar: ['administrador', 'supervisor'],
+    eliminar: ['administrador'],
+  },
 }
 
-export async function getMatrizPermisos(supabase: SupabaseClient) {
-  const { data, error } = await supabase
-    .from('permisos_vista')
-    .select('rol, modulo, puede_ver')
-    .order('modulo')
-
-  if (error) throw error
-  return data as { rol: RolUsuario; modulo: ModuloVista; puede_ver: boolean }[]
+export function puede(rol: RolUsuario, modulo: Modulo, accion: Accion): boolean {
+  return PERMISOS[modulo][accion].includes(rol)
 }
 
-export async function actualizarPermisoVista(supabase: SupabaseClient, rol: RolUsuario, modulo: ModuloVista, puedeVer: boolean) {
-  const { error } = await supabase
-    .from('permisos_vista')
-    .update({ puede_ver: puedeVer })
-    .eq('rol', rol)
-    .eq('modulo', modulo)
+// --- Qué puede VER cada rol (menú y acceso directo a la pantalla) ---
+// Nota: esto ya no se usa para el menú (ahora se controla desde Configuración → Permisos por rol),
+// pero se deja vigente por si algo más lo sigue usando.
 
-<<<<<<< Updated upstream
 export type ModuloVista =
   | 'dashboard'
   | 'vehiculos'
@@ -68,6 +83,8 @@ export type ModuloVista =
   | 'reportes_unidad'
   | 'pases_salida'
   | 'almacen'
+  | 'dashboard_diesel'
+  | 'llantas'
 
 const VISTA_POR_ROL: Record<ModuloVista, RolUsuario[]> = {
   dashboard: ['administrador', 'supervisor', 'contabilidad', 'auditor'],
@@ -83,25 +100,18 @@ const VISTA_POR_ROL: Record<ModuloVista, RolUsuario[]> = {
   reportes_unidad: ['administrador', 'supervisor'],
   pases_salida: ['administrador', 'supervisor', 'guardia'],
   almacen: ['administrador', 'supervisor', 'capturista', 'operador'],
-=======
-  if (error) throw error
->>>>>>> Stashed changes
+  dashboard_diesel: ['administrador', 'supervisor', 'contabilidad'],
+  llantas: ['administrador', 'supervisor', 'capturista', 'operador', 'auditor'],
 }
 
-export async function getModulosEmpresa(supabase: SupabaseClient, empresaId: string) {
-  const { data, error } = await supabase
-    .from('modulos_empresa')
-    .select('modulo, activo')
-    .eq('empresa_id', empresaId)
-
-  if (error) throw error
-  return data as { modulo: ModuloVista; activo: boolean }[]
+export function puedeVer(rol: RolUsuario, modulo: ModuloVista): boolean {
+  return VISTA_POR_ROL[modulo]?.includes(rol) ?? false
 }
 
-export async function actualizarModuloEmpresa(supabase: SupabaseClient, empresaId: string, modulo: ModuloVista, activo: boolean) {
-  const { error } = await supabase
-    .from('modulos_empresa')
-    .upsert({ empresa_id: empresaId, modulo, activo })
+// --- Detalle de una carga (fotos, folio, observaciones) ---
 
-  if (error) throw error
+const DETALLE_CARGAS_ROLES: RolUsuario[] = ['administrador', 'supervisor', 'capturista', 'contabilidad', 'auditor']
+
+export function puedeVerDetalleCargas(rol: RolUsuario): boolean {
+  return DETALLE_CARGAS_ROLES.includes(rol)
 }

@@ -24,6 +24,7 @@ export async function crearCargaAction(formData: FormData) {
     precio_litro: precio,
     total_pagado: litros * precio,
     metodo_pago: formData.get('metodo_pago') as any,
+    fecha_hora: (formData.get('fecha_hora') as string) || undefined,
     folio_ticket: (formData.get('folio_ticket') as string) || undefined,
     foto_ticket_url: (formData.get('foto_ticket_url') as string) || undefined,
     foto_kilometraje_url: (formData.get('foto_kilometraje_url') as string) || undefined,

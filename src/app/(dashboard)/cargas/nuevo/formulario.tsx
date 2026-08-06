@@ -75,6 +75,12 @@ export function FormularioNuevaCarga({
       datosFinales.set('precio_litro', datos.get('precio_litro') as string)
       datosFinales.set('metodo_pago', datos.get('metodo_pago') as string)
       datosFinales.set('observaciones', (datos.get('observaciones') as string) ?? '')
+
+      const fechaHoraLocal = datos.get('fecha_hora') as string
+      if (fechaHoraLocal) {
+        datosFinales.set('fecha_hora', new Date(fechaHoraLocal).toISOString())
+      }
+
       if (urlTicket) datosFinales.set('foto_ticket_url', urlTicket)
       if (urlKm) datosFinales.set('foto_kilometraje_url', urlKm)
       if (urlBomba) datosFinales.set('foto_bomba_url', urlBomba)
@@ -123,16 +129,22 @@ export function FormularioNuevaCarga({
         <Campo label="Litros cargados" name="litros_cargados" type="number" step="0.01" required />
         <Campo label="Precio por litro" name="precio_litro" type="number" step="0.01" required />
       </div>
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Método de pago</label>
-        <select name="metodo_pago" required className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-          <option value="tarjeta_empresa">Tarjeta empresa</option>
-          <option value="efectivo">Efectivo</option>
-          <option value="transferencia">Transferencia</option>
-          <option value="credito_proveedor">Crédito proveedor</option>
-          <option value="vale">Vale</option>
-        </select>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Método de pago</label>
+          <select name="metodo_pago" required className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+            <option value="tarjeta_empresa">Tarjeta empresa</option>
+            <option value="efectivo">Efectivo</option>
+            <option value="transferencia">Transferencia</option>
+            <option value="credito_proveedor">Crédito proveedor</option>
+            <option value="vale">Vale</option>
+          </select>
+        </div>
+        <Campo label="Fecha y hora de la carga (opcional)" name="fecha_hora" type="datetime-local" />
       </div>
+      <p className="text-xs text-slate-400 -mt-2">
+        Déjalo vacío para usar la fecha y hora de ahora mismo. Solo llénalo si vas a registrar una carga de días anteriores.
+      </p>
       <div className="grid grid-cols-2 gap-4">
         <Foto label="Foto del ticket (opcional)" name="foto_ticket" />
         <Foto label="Foto del kilometraje (opcional)" name="foto_kilometraje" />
