@@ -9,6 +9,8 @@ const ROLES: { value: string; label: string }[] = [
   { value: 'operador', label: 'Operador' },
   { value: 'contabilidad', label: 'Contabilidad' },
   { value: 'auditor', label: 'Auditor' },
+  { value: 'guardia', label: 'Guardia' },
+  { value: 'desarrollador', label: 'Desarrollador' },
 ]
 
 export default async function EditarUsuarioPage({
