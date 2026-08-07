@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getEnlacePorToken, guardarFirmaEnlace } from '@/repositories/enlace-publico-llanta.repository'
 
@@ -31,6 +32,7 @@ export async function guardarFirmaPublicaAction(token: string, formData: FormDat
       firmado_por: firmadoPor,
     })
 
+    revalidatePath(`/publico/llantas/${token}`)
     return { ok: true as const }
   } catch (error) {
     const mensaje = error instanceof Error ? error.message : 'No se pudo guardar la firma.'

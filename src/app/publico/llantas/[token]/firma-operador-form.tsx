@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { FirmaPad } from '@/components/ui/firma-pad'
 import { guardarFirmaPublicaAction } from './actions'
 
 export function FirmaOperadorForm({ token }: { token: string }) {
+  const router = useRouter()
   const [pendiente, iniciarTransicion] = useTransition()
   const [error, setError] = useState('')
 
@@ -12,7 +14,11 @@ export function FirmaOperadorForm({ token }: { token: string }) {
     setError('')
     iniciarTransicion(async () => {
       const resultado = await guardarFirmaPublicaAction(token, formData)
-      if (!resultado.ok) setError(resultado.mensaje)
+      if (!resultado.ok) {
+        setError(resultado.mensaje)
+        return
+      }
+      router.refresh()
     })
   }
 
