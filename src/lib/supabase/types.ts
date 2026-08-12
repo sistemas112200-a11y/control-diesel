@@ -11,11 +11,13 @@ export type EstadoAlerta = 'nueva' | 'revisada' | 'descartada'
 export type TipoMantenimiento = 'preventivo' | 'correctivo'
 export type EstadoReporte = 'abierta' | 'asignada' | 'en_proceso' | 'espera_refacciones' | 'completada'
 export type PrioridadOrden = 'alta' | 'media' | 'baja'
+export type SistemaUnidades = 'metrico' | 'imperial'
 
 export interface Empresa {
   id: string
   nombre: string
   rfc: string | null
+  unidad_medida: SistemaUnidades
   limite_usuarios: number | null
   limite_vehiculos: number | null
   created_at: string

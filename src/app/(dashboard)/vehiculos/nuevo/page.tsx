@@ -1,6 +1,15 @@
+import { createClient } from '@/lib/supabase/server'
+import { getUsuarioActual } from '@/lib/auth/session'
+import { getEmpresaById } from '@/repositories/empresa.repository'
+import { ETIQUETA_VOLUMEN, ETIQUETA_RENDIMIENTO } from '@/lib/unidades'
 import { crearVehiculoAction } from './actions'
 
-export default function NuevoVehiculoPage() {
+export default async function NuevoVehiculoPage() {
+  const usuario = await getUsuarioActual()
+  const supabase = await createClient()
+  const empresa = usuario ? await getEmpresaById(supabase, usuario.empresaId) : null
+  const unidad = empresa?.unidad_medida ?? 'metrico'
+
   return (
     <div className="max-w-xl space-y-6">
       <h1 className="text-lg font-semibold text-slate-900">Nuevo vehículo</h1>
@@ -14,9 +23,21 @@ export default function NuevoVehiculoPage() {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <Campo label="Año" name="anio" type="number" />
-          <Campo label="Capacidad tanque (L)" name="capacidad_tanque1_litros" type="number" required />
+          <Campo
+            label={`Capacidad tanque (${ETIQUETA_VOLUMEN[unidad]})`}
+            name="capacidad_tanque1_litros"
+            type="number"
+            step="0.01"
+            required
+          />
         </div>
-        <Campo label="Rendimiento esperado (km/L)" name="rendimiento_esperado_km_l" type="number" step="0.1" required />
+        <Campo
+          label={`Rendimiento esperado (${ETIQUETA_RENDIMIENTO[unidad]})`}
+          name="rendimiento_esperado_km_l"
+          type="number"
+          step="0.1"
+          required
+        />
 
         <button
           type="submit"

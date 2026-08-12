@@ -4,8 +4,10 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { actualizarVehiculo } from '@/repositories/vehiculo.repository'
+import { getEmpresaById } from '@/repositories/empresa.repository'
 import { getUsuarioActual } from '@/lib/auth/session'
 import { puede } from '@/lib/auth/permissions'
+import { galonesALitros, mpgAKmL } from '@/lib/unidades'
 
 export async function actualizarVehiculoAction(formData: FormData) {
   const usuario = await getUsuarioActual()
@@ -22,15 +24,21 @@ export async function actualizarVehiculoAction(formData: FormData) {
       throw new Error('El año no parece válido')
     }
 
-    const capacidad = Number(formData.get('capacidad_tanque1_litros'))
-    if (!capacidad || capacidad <= 0) {
+    const supabase = await createClient()
+    const empresa = await getEmpresaById(supabase, usuario.empresaId)
+    const unidad = empresa.unidad_medida
+
+    const capacidadIngresada = Number(formData.get('capacidad_tanque1_litros'))
+    if (!capacidadIngresada || capacidadIngresada <= 0) {
       throw new Error('La capacidad del tanque debe ser mayor a cero')
     }
+    const capacidad = unidad === 'imperial' ? galonesALitros(capacidadIngresada) : capacidadIngresada
 
-    const rendimiento = Number(formData.get('rendimiento_esperado_km_l'))
-    if (!rendimiento || rendimiento <= 0) {
+    const rendimientoIngresado = Number(formData.get('rendimiento_esperado_km_l'))
+    if (!rendimientoIngresado || rendimientoIngresado <= 0) {
       throw new Error('El rendimiento esperado debe ser mayor a cero')
     }
+    const rendimiento = unidad === 'imperial' ? mpgAKmL(rendimientoIngresado) : rendimientoIngresado
 
     const intervaloRaw = formData.get('intervalo_mantenimiento_km')
     const intervalo = intervaloRaw ? Number(intervaloRaw) : null
@@ -38,7 +46,6 @@ export async function actualizarVehiculoAction(formData: FormData) {
       throw new Error('El intervalo de mantenimiento debe ser mayor a cero')
     }
 
-    const supabase = await createClient()
     await actualizarVehiculo(supabase, id, {
       numero_economico: formData.get('numero_economico') as string,
       placas: (formData.get('placas') as string) || undefined,

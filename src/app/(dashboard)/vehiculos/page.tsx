@@ -1,6 +1,9 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getVehiculos } from '@/repositories/vehiculo.repository'
+import { getEmpresaById } from '@/repositories/empresa.repository'
+import { getUsuarioActual } from '@/lib/auth/session'
+import { formatoRendimiento } from '@/lib/unidades'
 import { cambiarEstadoVehiculoAction } from './actions'
 
 const ESTADO_LABEL: Record<string, string> = {
@@ -29,6 +32,10 @@ export default async function VehiculosPage({
 }) {
   const { q, ok, estado } = await searchParams
   const supabase = await createClient()
+  const usuario = await getUsuarioActual()
+  const empresa = usuario ? await getEmpresaById(supabase, usuario.empresaId) : null
+  const unidad = empresa?.unidad_medida ?? 'metrico'
+
   const todosLosVehiculos = await getVehiculos(supabase, undefined, q)
 
   const vehiculos = estado ? todosLosVehiculos.filter((v) => v.estado === estado) : todosLosVehiculos
@@ -115,7 +122,7 @@ export default async function VehiculosPage({
                   <td className="px-4 py-3 font-medium text-slate-900">{v.numero_economico}</td>
                   <td className="px-4 py-3 text-slate-600">{v.placas ?? '—'}</td>
                   <td className="px-4 py-3 text-slate-600">{v.marca} {v.modelo}</td>
-                  <td className="px-4 py-3 text-slate-600">{v.rendimiento_esperado_km_l} km/L</td>
+                  <td className="px-4 py-3 text-slate-600">{formatoRendimiento(v.rendimiento_esperado_km_l, unidad)}</td>
                   <td className="px-4 py-3">
                     <span className={`rounded-full px-2 py-1 text-xs font-medium ${ESTADO_COLOR[v.estado]}`}>
                       {ESTADO_LABEL[v.estado]}

@@ -6,8 +6,10 @@ import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { vehiculoSchema } from '@/lib/validation/vehiculo.schema'
 import { crearVehiculo } from '@/repositories/vehiculo.repository'
+import { getEmpresaById } from '@/repositories/empresa.repository'
 import { getUsuarioActual } from '@/lib/auth/session'
 import { puede } from '@/lib/auth/permissions'
+import { galonesALitros, mpgAKmL } from '@/lib/unidades'
 
 export async function crearVehiculoAction(formData: FormData) {
   const usuario = await getUsuarioActual()
@@ -24,7 +26,16 @@ export async function crearVehiculoAction(formData: FormData) {
     .limit(1)
     .maybeSingle()
 
+  const empresa = await getEmpresaById(supabase, usuario.empresaId)
+  const unidad = empresa.unidad_medida
+
   try {
+    const capacidadIngresada = Number(formData.get('capacidad_tanque1_litros'))
+    const rendimientoIngresado = Number(formData.get('rendimiento_esperado_km_l'))
+
+    const capacidadLitros = unidad === 'imperial' ? galonesALitros(capacidadIngresada) : capacidadIngresada
+    const rendimientoKmL = unidad === 'imperial' ? mpgAKmL(rendimientoIngresado) : rendimientoIngresado
+
     const input = vehiculoSchema.parse({
       empresa_id: usuario.empresaId,
       terminal_id: terminal?.terminal_id,
@@ -33,8 +44,8 @@ export async function crearVehiculoAction(formData: FormData) {
       marca: formData.get('marca') || undefined,
       modelo: formData.get('modelo') || undefined,
       anio: formData.get('anio') ? Number(formData.get('anio')) : undefined,
-      capacidad_tanque1_litros: Number(formData.get('capacidad_tanque1_litros')),
-      rendimiento_esperado_km_l: Number(formData.get('rendimiento_esperado_km_l')),
+      capacidad_tanque1_litros: capacidadLitros,
+      rendimiento_esperado_km_l: rendimientoKmL,
     })
 
     await crearVehiculo(supabase, input)

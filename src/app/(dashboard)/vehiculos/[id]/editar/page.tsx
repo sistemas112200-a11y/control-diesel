@@ -2,6 +2,9 @@ import Link from 'next/link'
 import QRCode from 'qrcode'
 import { createClient } from '@/lib/supabase/server'
 import { getVehiculoById } from '@/repositories/vehiculo.repository'
+import { getEmpresaById } from '@/repositories/empresa.repository'
+import { getUsuarioActual } from '@/lib/auth/session'
+import { litrosAGalones, kmLaMpg, ETIQUETA_VOLUMEN, ETIQUETA_RENDIMIENTO } from '@/lib/unidades'
 import { actualizarVehiculoAction } from './actions'
 
 export default async function EditarVehiculoPage({
@@ -15,6 +18,16 @@ export default async function EditarVehiculoPage({
   const { error } = await searchParams
   const supabase = await createClient()
   const vehiculo = await getVehiculoById(supabase, id)
+  const usuario = await getUsuarioActual()
+  const empresa = usuario ? await getEmpresaById(supabase, usuario.empresaId) : null
+  const unidad = empresa?.unidad_medida ?? 'metrico'
+
+  const capacidadMostrada = unidad === 'imperial'
+    ? litrosAGalones(vehiculo.capacidad_tanque1_litros)
+    : vehiculo.capacidad_tanque1_litros
+  const rendimientoMostrado = unidad === 'imperial'
+    ? kmLaMpg(vehiculo.rendimiento_esperado_km_l)
+    : vehiculo.rendimiento_esperado_km_l
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
   const urlUnidad = `${baseUrl}/unidad/${vehiculo.id}`
@@ -57,19 +70,19 @@ export default async function EditarVehiculoPage({
         </div>
         <div className="grid grid-cols-2 gap-4">
           <Campo
-            label="Capacidad de tanque (L)"
+            label={`Capacidad de tanque (${ETIQUETA_VOLUMEN[unidad]})`}
             name="capacidad_tanque1_litros"
             type="number"
             step="0.01"
-            defaultValue={String(vehiculo.capacidad_tanque1_litros)}
+            defaultValue={capacidadMostrada.toFixed(2)}
             required
           />
           <Campo
-            label="Rendimiento esperado (km/L)"
+            label={`Rendimiento esperado (${ETIQUETA_RENDIMIENTO[unidad]})`}
             name="rendimiento_esperado_km_l"
             type="number"
             step="0.01"
-            defaultValue={String(vehiculo.rendimiento_esperado_km_l)}
+            defaultValue={rendimientoMostrado.toFixed(2)}
             required
           />
         </div>
