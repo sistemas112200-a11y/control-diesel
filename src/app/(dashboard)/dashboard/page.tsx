@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getAvisosActivosParaEmpresa } from '@/repositories/aviso.repository'
+import { getEmpresaById } from '@/repositories/empresa.repository'
 import { BannerAvisos } from '@/components/ui/banner-avisos'
+import { formatoVolumen, formatoRendimiento, type SistemaUnidades } from '@/lib/unidades'
 
 function inicioDeHoy() {
   const d = new Date()
@@ -28,10 +30,13 @@ export default async function DashboardPage() {
 
   const { data: { user } } = await supabase.auth.getUser()
   let avisos: Awaited<ReturnType<typeof getAvisosActivosParaEmpresa>> = []
+  let unidad: SistemaUnidades = 'metrico'
   if (user) {
     const { data: perfil } = await supabase.from('usuarios').select('empresa_id').eq('id', user.id).single()
     if (perfil) {
       avisos = await getAvisosActivosParaEmpresa(supabase, perfil.empresa_id)
+      const empresa = await getEmpresaById(supabase, perfil.empresa_id)
+      unidad = empresa.unidad_medida
     }
   }
 
@@ -75,9 +80,9 @@ export default async function DashboardPage() {
       <h1 className="text-lg font-semibold text-slate-900">Dashboard</h1>
 
       <div className="grid grid-cols-4 gap-4">
-        <TarjetaKpi label="Litros hoy" valor={`${litrosHoy.toFixed(0)} L`} />
+        <TarjetaKpi label="Litros hoy" valor={formatoVolumen(litrosHoy, unidad, 0)} />
         <TarjetaKpi label="Gasto del mes" valor={`$${gastoMes.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`} />
-        <TarjetaKpi label="Rendimiento promedio" valor={`${rendimientoPromedio.toFixed(2)} km/L`} />
+        <TarjetaKpi label="Rendimiento promedio" valor={formatoRendimiento(rendimientoPromedio, unidad)} />
         <TarjetaKpi label="Alertas activas" valor={String(totalAlertas)} destacado={totalAlertas > 0} />
       </div>
 
@@ -120,9 +125,9 @@ export default async function DashboardPage() {
                   <tr key={v.id}>
                     <td className="px-4 py-2 font-medium text-slate-900">{v.numero_economico}</td>
                     <td className="px-4 py-2 text-slate-600">{v.marca} {v.modelo}</td>
-                    <td className="px-4 py-2 text-slate-600">{v.rendimiento_esperado_km_l} km/L</td>
+                    <td className="px-4 py-2 text-slate-600">{formatoRendimiento(v.rendimiento_esperado_km_l, unidad)}</td>
                     <td className={`px-4 py-2 ${claseComparacion(real, v.rendimiento_esperado_km_l)}`}>
-                      {real != null ? `${real.toFixed(2)} km/L` : 'Sin datos'}
+                      {real != null ? formatoRendimiento(real, unidad) : 'Sin datos'}
                     </td>
                   </tr>
                 )
