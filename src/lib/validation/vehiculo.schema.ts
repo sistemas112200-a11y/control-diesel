@@ -14,6 +14,8 @@ export const vehiculoSchema = z.object({
   rendimiento_esperado_km_l: z.number().positive('El rendimiento esperado debe ser mayor a 0'),
   estado: z.enum(['activo', 'taller', 'baja']).default('activo'),
   foto_url: z.string().url().optional(),
+  numero_llantas: z.number().int().positive('El número de llantas debe ser mayor a 0').default(6),
+  tiene_eje_delantero: z.boolean().default(true),
 })
 
 export type VehiculoInput = z.infer<typeof vehiculoSchema>

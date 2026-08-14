@@ -86,6 +86,26 @@ export default async function EditarVehiculoPage({
             required
           />
         </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <Campo label="Número de llantas" name="numero_llantas" type="number" defaultValue={String(vehiculo.numero_llantas)} required />
+          <div className="flex items-center gap-2 pt-6">
+            <input
+              id="tiene_eje_delantero"
+              name="tiene_eje_delantero"
+              type="checkbox"
+              defaultChecked={vehiculo.tiene_eje_delantero}
+              className="h-4 w-4 rounded border-slate-300 text-brand focus:ring-brand"
+            />
+            <label htmlFor="tiene_eje_delantero" className="text-sm font-medium text-slate-700">
+              Tiene eje delantero (como un tracto)
+            </label>
+          </div>
+        </div>
+        <p className="text-xs text-slate-500 -mt-2">
+          Desmarca esta casilla para dollys o remolques, que no tienen llanta delantera sencilla.
+        </p>
+
         <Campo
           label="Intervalo de mantenimiento (km) — opcional"
           name="intervalo_mantenimiento_km"

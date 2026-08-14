@@ -40,6 +40,12 @@ export async function actualizarVehiculoAction(formData: FormData) {
     }
     const rendimiento = unidad === 'imperial' ? mpgAKmL(rendimientoIngresado) : rendimientoIngresado
 
+    const numeroLlantas = Number(formData.get('numero_llantas'))
+    if (!numeroLlantas || numeroLlantas <= 0) {
+      throw new Error('El número de llantas debe ser mayor a cero')
+    }
+    const tieneEjeDelantero = formData.get('tiene_eje_delantero') === 'on'
+
     const intervaloRaw = formData.get('intervalo_mantenimiento_km')
     const intervalo = intervaloRaw ? Number(intervaloRaw) : null
     if (intervalo != null && intervalo <= 0) {
@@ -54,6 +60,8 @@ export async function actualizarVehiculoAction(formData: FormData) {
       anio,
       capacidad_tanque1_litros: capacidad,
       rendimiento_esperado_km_l: rendimiento,
+      numero_llantas: numeroLlantas,
+      tiene_eje_delantero: tieneEjeDelantero,
     })
 
     const { error } = await supabase

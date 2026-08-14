@@ -2,18 +2,8 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getLlantaById } from '@/repositories/llanta.repository'
 import { getMedicionesPorLlanta } from '@/repositories/medicion-llanta.repository'
+import { etiquetaPosicion } from '@/lib/llantas-config'
 import { registrarMedicionAction, darDeBajaLlantaAction } from './actions'
-
-const ETIQUETAS_POSICION: Record<string, string> = {
-  delantera_izquierda: 'Delantera izquierda',
-  delantera_derecha: 'Delantera derecha',
-  trasera_izquierda_interna: 'Trasera izquierda interna',
-  trasera_izquierda_externa: 'Trasera izquierda externa',
-  trasera_derecha_interna: 'Trasera derecha interna',
-  trasera_derecha_externa: 'Trasera derecha externa',
-  refaccion: 'Refacción',
-  otra: 'Otra',
-}
 
 export default async function LlantaDetallePage({
   params,
@@ -37,7 +27,7 @@ export default async function LlantaDetallePage({
           {llanta.marca} {llanta.modelo ?? ''}
         </h1>
         <p className="text-sm text-slate-500">
-          {llanta.posicion ? ETIQUETAS_POSICION[llanta.posicion] : 'Sin posición'} · {llanta.medida ?? 'Sin medida'}
+          {etiquetaPosicion(llanta.posicion)} · {llanta.medida ?? 'Sin medida'}
         </p>
       </div>
 

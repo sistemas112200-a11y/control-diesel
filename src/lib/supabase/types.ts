@@ -77,6 +77,8 @@ export interface Vehiculo {
   foto_url: string | null
   km_actual: number
   intervalo_mantenimiento_km: number | null
+  numero_llantas: number
+  tiene_eje_delantero: boolean
   created_at: string
   updated_at: string
   deleted_at: string | null

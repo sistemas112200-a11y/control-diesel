@@ -46,6 +46,8 @@ export async function crearVehiculoAction(formData: FormData) {
       anio: formData.get('anio') ? Number(formData.get('anio')) : undefined,
       capacidad_tanque1_litros: capacidadLitros,
       rendimiento_esperado_km_l: rendimientoKmL,
+      numero_llantas: formData.get('numero_llantas') ? Number(formData.get('numero_llantas')) : undefined,
+      tiene_eje_delantero: formData.get('tiene_eje_delantero') === 'on',
     })
 
     await crearVehiculo(supabase, input)

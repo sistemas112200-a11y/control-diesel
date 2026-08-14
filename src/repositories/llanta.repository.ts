@@ -1,14 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-export type PosicionLlanta =
-  | 'delantera_izquierda'
-  | 'delantera_derecha'
-  | 'trasera_izquierda_interna'
-  | 'trasera_izquierda_externa'
-  | 'trasera_derecha_interna'
-  | 'trasera_derecha_externa'
-  | 'refaccion'
-  | 'otra'
+export type PosicionLlanta = string
 
 export type EstadoLlanta = 'en_uso' | 'almacen' | 'baja'
 
