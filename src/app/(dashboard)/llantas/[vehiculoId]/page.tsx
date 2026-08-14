@@ -1,79 +1,175 @@
-'use server'
-
-import { redirect } from 'next/navigation'
-import { revalidatePath } from 'next/cache'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { actualizarVehiculo } from '@/repositories/vehiculo.repository'
-import { getEmpresaById } from '@/repositories/empresa.repository'
-import { getUsuarioActual } from '@/lib/auth/session'
-import { puede } from '@/lib/auth/permissions'
-import { galonesALitros, mpgAKmL } from '@/lib/unidades'
+import { getVehiculoById } from '@/repositories/vehiculo.repository'
+import { getLlantas, type Llanta } from '@/repositories/llanta.repository'
+import { generarEjes, etiquetaPosicion } from '@/lib/llantas-config'
 
-export async function actualizarVehiculoAction(formData: FormData) {
-  const usuario = await getUsuarioActual()
-  if (!usuario || !puede(usuario.rol, 'vehiculos', 'editar')) {
-    throw new Error('No tienes permiso para editar vehículos')
+type EstadoVisual = 'vacio' | 'bien' | 'atencion' | 'critico'
+
+function estadoVisualLlanta(llanta: Llanta | undefined): EstadoVisual {
+  if (!llanta) return 'vacio'
+  if (llanta.profundidad_actual_mm == null) return 'atencion'
+  if (llanta.profundidad_actual_mm <= llanta.profundidad_minima_mm) return 'critico'
+  if (llanta.presion_actual_psi != null && llanta.presion_recomendada_psi) {
+    const diferencia = Math.abs(llanta.presion_actual_psi - llanta.presion_recomendada_psi) / llanta.presion_recomendada_psi
+    if (diferencia > 0.15) return 'atencion'
+  }
+  const margen = llanta.profundidad_actual_mm - llanta.profundidad_minima_mm
+  if (margen <= 2) return 'atencion'
+  return 'bien'
+}
+
+const COLOR_ESTADO: Record<EstadoVisual, string> = {
+  vacio: 'bg-slate-200 border-slate-300 text-slate-500',
+  bien: 'bg-green-100 border-green-400 text-green-700',
+  atencion: 'bg-amber-100 border-amber-400 text-amber-700',
+  critico: 'bg-red-100 border-red-400 text-red-700',
+}
+
+const LABEL_ESTADO: Record<EstadoVisual, string> = {
+  vacio: 'Sin registrar',
+  bien: 'Bien',
+  atencion: 'Revisar',
+  critico: 'Crítico',
+}
+
+export default async function LlantasVehiculoPage({
+  params,
+}: {
+  params: Promise<{ vehiculoId: string }>
+}) {
+  const { vehiculoId } = await params
+  const supabase = await createClient()
+  const vehiculo = await getVehiculoById(supabase, vehiculoId)
+  const llantas = await getLlantas(supabase, { vehiculoId, estado: 'en_uso' })
+
+  const porPosicion = new Map<string, Llanta>()
+  for (const l of llantas) {
+    if (l.posicion) porPosicion.set(l.posicion, l)
+  }
+  const extras = llantas.filter((l) => l.posicion === 'refaccion' || l.posicion === 'otra')
+
+  const ejes = generarEjes(vehiculo.numero_llantas, vehiculo.tiene_eje_delantero)
+
+  function Llantita({ posicion, etiqueta }: { posicion: string; etiqueta: string }) {
+    const llanta = porPosicion.get(posicion)
+    const estado = estadoVisualLlanta(llanta)
+    const href = llanta
+      ? `/llantas/${vehiculoId}/${llanta.id}`
+      : `/llantas/${vehiculoId}/nueva?posicion=${posicion}`
+
+    return (
+      <Link
+        href={href}
+        className={`flex flex-col items-center justify-center w-20 h-20 rounded-lg border-2 text-center px-1 transition-transform hover:scale-105 ${COLOR_ESTADO[estado]}`}
+        title={etiqueta}
+      >
+        <span className="text-lg">🛞</span>
+        <span className="text-[10px] font-medium leading-tight mt-0.5">
+          {llanta?.profundidad_actual_mm != null ? `${llanta.profundidad_actual_mm} mm` : LABEL_ESTADO[estado]}
+        </span>
+      </Link>
+    )
   }
 
-  const id = formData.get('id') as string
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <Link href="/llantas" className="text-xs font-medium text-brand-dark hover:underline">
+            ← Todas las unidades
+          </Link>
+          <h1 className="text-lg font-semibold text-slate-900 mt-1">
+            Llantas de {vehiculo.numero_economico}
+          </h1>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/vehiculos/${vehiculoId}/editar`}
+            className="text-xs font-medium text-brand-dark hover:underline"
+          >
+            Cambiar configuración de ejes
+          </Link>
+          <Link
+            href={`/llantas/${vehiculoId}/nueva`}
+            className="rounded-md bg-brand hover:bg-brand-dark text-white text-sm font-medium px-4 py-2 transition-colors"
+          >
+            + Nueva llanta
+          </Link>
+        </div>
+      </div>
 
-  try {
-    const anioRaw = formData.get('anio')
-    const anio = anioRaw ? Number(anioRaw) : undefined
-    if (anio != null && (anio < 1980 || anio > new Date().getFullYear() + 1)) {
-      throw new Error('El año no parece válido')
-    }
+      <div className="bg-white rounded-xl border border-slate-200 p-8">
+        <div className="max-w-sm mx-auto flex flex-col items-center gap-6">
+          {ejes.map((eje) => {
+            if (eje.posiciones.length === 4) {
+              const [extIzq, intIzq, intDer, extDer] = eje.posiciones
+              return (
+                <div key={`${eje.tipo}-${eje.numero}`} className="flex items-center gap-4">
+                  <Llantita posicion={extIzq.posicion} etiqueta={extIzq.etiqueta} />
+                  <Llantita posicion={intIzq.posicion} etiqueta={intIzq.etiqueta} />
+                  <div className="w-6" />
+                  <Llantita posicion={intDer.posicion} etiqueta={intDer.etiqueta} />
+                  <Llantita posicion={extDer.posicion} etiqueta={extDer.etiqueta} />
+                </div>
+              )
+            }
+            const [izq, der] = eje.posiciones
+            return (
+              <div key={`${eje.tipo}-${eje.numero}`} className="flex items-center gap-16">
+                <Llantita posicion={izq.posicion} etiqueta={izq.etiqueta} />
+                <Llantita posicion={der.posicion} etiqueta={der.etiqueta} />
+              </div>
+            )
+          })}
+        </div>
 
-    const supabase = await createClient()
-    const empresa = await getEmpresaById(supabase, usuario.empresaId)
-    const unidad = empresa.unidad_medida
+        <div className="flex items-center justify-center gap-4 mt-8 text-xs text-slate-500">
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-100 border border-green-400" /> Bien</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-amber-100 border border-amber-400" /> Revisar</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-red-100 border border-red-400" /> Crítico</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-slate-200 border border-slate-300" /> Sin registrar</span>
+        </div>
+      </div>
 
-    const capacidadIngresada = Number(formData.get('capacidad_tanque1_litros'))
-    if (!capacidadIngresada || capacidadIngresada <= 0) {
-      throw new Error('La capacidad del tanque debe ser mayor a cero')
-    }
-    const capacidad = unidad === 'imperial' ? galonesALitros(capacidadIngresada) : capacidadIngresada
-
-    const rendimientoIngresado = Number(formData.get('rendimiento_esperado_km_l'))
-    if (!rendimientoIngresado || rendimientoIngresado <= 0) {
-      throw new Error('El rendimiento esperado debe ser mayor a cero')
-    }
-    const rendimiento = unidad === 'imperial' ? mpgAKmL(rendimientoIngresado) : rendimientoIngresado
-
-    const numeroLlantas = Number(formData.get('numero_llantas'))
-    if (!numeroLlantas || numeroLlantas <= 0) {
-      throw new Error('El número de llantas debe ser mayor a cero')
-    }
-    const tieneEjeDelantero = formData.get('tiene_eje_delantero') === 'on'
-
-    const intervaloRaw = formData.get('intervalo_mantenimiento_km')
-    const intervalo = intervaloRaw ? Number(intervaloRaw) : null
-    if (intervalo != null && intervalo <= 0) {
-      throw new Error('El intervalo de mantenimiento debe ser mayor a cero')
-    }
-
-    await actualizarVehiculo(supabase, id, {
-      numero_economico: formData.get('numero_economico') as string,
-      placas: (formData.get('placas') as string) || undefined,
-      marca: (formData.get('marca') as string) || undefined,
-      modelo: (formData.get('modelo') as string) || undefined,
-      anio,
-      capacidad_tanque1_litros: capacidad,
-      rendimiento_esperado_km_l: rendimiento,
-      numero_llantas: numeroLlantas,
-      tiene_eje_delantero: tieneEjeDelantero,
-    })
-
-    const { error } = await supabase
-      .from('vehiculos')
-      .update({ intervalo_mantenimiento_km: intervalo })
-      .eq('id', id)
-    if (error) throw error
-  } catch (error) {
-    const mensaje = error instanceof Error ? error.message : 'No se pudo guardar el vehículo, revisa los datos.'
-    redirect(`/vehiculos/${id}/editar?error=${encodeURIComponent(mensaje)}`)
-  }
-
-  revalidatePath('/vehiculos')
-  redirect('/vehiculos?ok=vehiculo')
+      {extras.length > 0 && (
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <div className="px-4 py-3 border-b border-slate-100">
+            <h2 className="text-sm font-semibold text-slate-900">Refacción y otras</h2>
+          </div>
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50 text-slate-500 text-xs uppercase">
+              <tr>
+                <th className="text-left px-4 py-3">Posición</th>
+                <th className="text-left px-4 py-3">Marca</th>
+                <th className="text-left px-4 py-3">Estado</th>
+                <th className="text-left px-4 py-3"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {extras.map((l) => {
+                const estado = estadoVisualLlanta(l)
+                return (
+                  <tr key={l.id}>
+                    <td className="px-4 py-3 text-slate-600">{etiquetaPosicion(l.posicion)}</td>
+                    <td className="px-4 py-3 text-slate-600">{l.marca}</td>
+                    <td className="px-4 py-3">
+                      <span className={`rounded-full px-2 py-1 text-xs font-medium ${COLOR_ESTADO[estado]}`}>
+                        {LABEL_ESTADO[estado]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link href={`/llantas/${vehiculoId}/${l.id}`} className="text-xs font-medium text-brand-dark hover:underline">
+                        Ver
+                      </Link>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
 }
