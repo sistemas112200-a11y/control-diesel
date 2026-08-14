@@ -21,9 +21,9 @@ function formatoFechaHora(fechaHora: string) {
 export default async function CargasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ alerta?: string; q?: string }>
+  searchParams: Promise<{ alerta?: string; q?: string; desde?: string; hasta?: string }>
 }) {
-  const { alerta, q } = await searchParams
+  const { alerta, q, desde, hasta } = await searchParams
   const supabase = await createClient()
   const usuarioActual = await getUsuarioActual()
   const empresa = await getEmpresaById(supabase, usuarioActual!.empresaId)
@@ -32,14 +32,25 @@ export default async function CargasPage({
   const todasLasCargas = await getCargas(supabase)
   const mostrarDetalle = usuarioActual ? puedeVerDetalleCargas(usuarioActual.rol) : false
 
-  const cargas = q
-    ? todasLasCargas.filter((c) => {
-        const unidadVehiculo = (c as any).vehiculos?.numero_economico ?? ''
-        const folio = c.folio_ticket ?? ''
-        const termino = q.toLowerCase()
-        return unidadVehiculo.toLowerCase().includes(termino) || folio.toLowerCase().includes(termino)
-      })
-    : todasLasCargas
+  let cargas = todasLasCargas
+
+  if (q) {
+    const termino = q.toLowerCase()
+    cargas = cargas.filter((c) => {
+      const unidadVehiculo = (c as any).vehiculos?.numero_economico ?? ''
+      const folio = c.folio_ticket ?? ''
+      return unidadVehiculo.toLowerCase().includes(termino) || folio.toLowerCase().includes(termino)
+    })
+  }
+
+  if (desde) {
+    const desdeMs = new Date(`${desde}T00:00:00`).getTime()
+    cargas = cargas.filter((c) => new Date(c.fecha_hora).getTime() >= desdeMs)
+  }
+  if (hasta) {
+    const hastaMs = new Date(`${hasta}T23:59:59.999`).getTime()
+    cargas = cargas.filter((c) => new Date(c.fecha_hora).getTime() <= hastaMs)
+  }
 
   return (
     <div className="space-y-6">
@@ -59,14 +70,46 @@ export default async function CargasPage({
         </Link>
       </div>
 
-      <form>
-        <input
-          type="text"
-          name="q"
-          defaultValue={q ?? ''}
-          placeholder="Buscar por unidad o folio de ticket..."
-          className="w-full max-w-sm rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-        />
+      <form className="flex flex-wrap items-end gap-3 bg-white rounded-xl border border-slate-200 p-4">
+        <div className="flex-1 min-w-[220px]">
+          <label className="block text-xs font-medium text-slate-600 mb-1">Buscar</label>
+          <input
+            type="text"
+            name="q"
+            defaultValue={q ?? ''}
+            placeholder="Unidad o folio de ticket..."
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Desde</label>
+          <input
+            type="date"
+            name="desde"
+            defaultValue={desde ?? ''}
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Hasta</label>
+          <input
+            type="date"
+            name="hasta"
+            defaultValue={hasta ?? ''}
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <button
+          type="submit"
+          className="rounded-md bg-brand hover:bg-brand-dark text-white text-sm font-medium px-4 py-2 transition-colors"
+        >
+          Filtrar
+        </button>
+        {(q || desde || hasta) && (
+          <Link href="/cargas" className="text-sm font-medium text-slate-500 hover:underline px-2 py-2">
+            Quitar filtros
+          </Link>
+        )}
       </form>
 
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
@@ -86,7 +129,7 @@ export default async function CargasPage({
             {cargas.length === 0 ? (
               <tr>
                 <td colSpan={mostrarDetalle ? 7 : 6} className="px-4 py-8 text-center text-slate-500">
-                  {q ? `No se encontraron cargas para "${q}".` : 'Aún no hay cargas registradas.'}
+                  {q || desde || hasta ? 'No se encontraron cargas con esos filtros.' : 'Aún no hay cargas registradas.'}
                 </td>
               </tr>
             ) : (
