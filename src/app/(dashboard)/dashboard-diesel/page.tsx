@@ -21,13 +21,20 @@ function formatoDinero(v: number) {
   return `$${v.toLocaleString('es-MX', { maximumFractionDigits: 0 })}`
 }
 
-export default async function DashboardDieselPage() {
+export default async function DashboardDieselPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ desde?: string; hasta?: string }>
+}) {
+  const { desde, hasta } = await searchParams
+  const rangoActivo = Boolean(desde || hasta)
+
   const supabase = await createClient()
   const usuario = await getUsuarioActual()
   const empresa = await getEmpresaById(supabase, usuario!.empresaId)
   const unidad = empresa.unidad_medida
 
-  const resumen = await getResumenDiesel(supabase, { meses: 6 })
+  const resumen = await getResumenDiesel(supabase, rangoActivo ? { desde, hasta } : { meses: 6 })
 
   const datosLitrosMes = resumen.porMes.map((m) => ({ etiqueta: formatearMes(m.mes), valor: m.litros }))
   const datosGastoMes = resumen.porMes.map((m) => ({ etiqueta: formatearMes(m.mes), valor: m.gasto }))
@@ -36,8 +43,47 @@ export default async function DashboardDieselPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-lg font-semibold text-slate-900">Dashboard - Diésel</h1>
-        <p className="text-sm text-slate-500 mt-1">Resumen de los últimos 6 meses, para presentar a dirección.</p>
+        <p className="text-sm text-slate-500 mt-1">
+          {rangoActivo
+            ? `Resumen del ${desde ?? '...'} al ${hasta ?? 'hoy'}.`
+            : 'Resumen de los últimos 6 meses, para presentar a dirección.'}
+        </p>
       </div>
+
+      <form className="flex items-end gap-3 bg-white rounded-xl border border-slate-200 p-4">
+        <div>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Desde</label>
+          <input
+            type="date"
+            name="desde"
+            defaultValue={desde ?? ''}
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Hasta</label>
+          <input
+            type="date"
+            name="hasta"
+            defaultValue={hasta ?? ''}
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <button
+          type="submit"
+          className="rounded-md bg-brand hover:bg-brand-dark text-white text-sm font-medium px-4 py-2 transition-colors"
+        >
+          Filtrar
+        </button>
+        {rangoActivo && (
+          
+            href="/dashboard-diesel"
+            className="text-sm font-medium text-slate-500 hover:underline px-2 py-2"
+          >
+            Quitar filtro (ver últimos 6 meses)
+          </a>
+        )}
+      </form>
 
       <div className="grid grid-cols-3 gap-4">
         <TarjetaKpi titulo={unidad === 'imperial' ? 'Galones cargados' : 'Litros cargados'} valor={formatoVolumen(resumen.litrosTotal, unidad, 0)} />

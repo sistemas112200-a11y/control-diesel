@@ -25,7 +25,16 @@ function claseComparacion(real: number | null, esperado: number): string {
   return 'text-amber-600 font-medium'
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ desde?: string; hasta?: string }>
+}) {
+  const { desde, hasta } = await searchParams
+  const rangoActivo = Boolean(desde || hasta)
+  const desdeISO = desde ? new Date(`${desde}T00:00:00`).toISOString() : undefined
+  const hastaISO = hasta ? new Date(`${hasta}T23:59:59.999`).toISOString() : undefined
+
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -40,17 +49,54 @@ export default async function DashboardPage() {
     }
   }
 
-  const [{ data: cargasHoy }, { data: cargasMes }, { data: alertasActivas }, { data: vehiculos }, { data: rendimientosCargas }] = await Promise.all([
-    supabase.from('cargas_combustible').select('litros_cargados').gte('fecha_hora', inicioDeHoy()).is('deleted_at', null),
-    supabase.from('cargas_combustible').select('total_pagado, rendimiento_km_l').gte('fecha_hora', inicioDeMes()).is('deleted_at', null),
+  let cargasPeriodo: { litros_cargados: number; total_pagado: number; rendimiento_km_l: number | null }[] = []
+  let cargasHoy: { litros_cargados: number }[] = []
+  let cargasMes: { total_pagado: number; rendimiento_km_l: number | null }[] = []
+
+  if (rangoActivo) {
+    let queryPeriodo = supabase
+      .from('cargas_combustible')
+      .select('litros_cargados, total_pagado, rendimiento_km_l')
+      .is('deleted_at', null)
+    if (desdeISO) queryPeriodo = queryPeriodo.gte('fecha_hora', desdeISO)
+    if (hastaISO) queryPeriodo = queryPeriodo.lte('fecha_hora', hastaISO)
+    const { data } = await queryPeriodo
+    cargasPeriodo = data ?? []
+  } else {
+    const [{ data: hoy }, { data: mes }] = await Promise.all([
+      supabase.from('cargas_combustible').select('litros_cargados').gte('fecha_hora', inicioDeHoy()).is('deleted_at', null),
+      supabase.from('cargas_combustible').select('total_pagado, rendimiento_km_l').gte('fecha_hora', inicioDeMes()).is('deleted_at', null),
+    ])
+    cargasHoy = hoy ?? []
+    cargasMes = mes ?? []
+  }
+
+  const [{ data: alertasActivas }, { data: vehiculos }] = await Promise.all([
     supabase.from('alertas').select('id, severidad').eq('estado', 'nueva'),
     supabase.from('vehiculos').select('id, numero_economico, marca, modelo, rendimiento_esperado_km_l, estado').is('deleted_at', null),
-    supabase.from('cargas_combustible').select('vehiculo_id, rendimiento_km_l').is('deleted_at', null).not('rendimiento_km_l', 'is', null),
   ])
 
-  const litrosHoy = (cargasHoy ?? []).reduce((sum, c) => sum + c.litros_cargados, 0)
-  const gastoMes = (cargasMes ?? []).reduce((sum, c) => sum + c.total_pagado, 0)
-  const rendimientos = (cargasMes ?? []).map((c) => c.rendimiento_km_l).filter((r): r is number => r != null)
+  let queryRendimientos = supabase
+    .from('cargas_combustible')
+    .select('vehiculo_id, rendimiento_km_l')
+    .is('deleted_at', null)
+    .not('rendimiento_km_l', 'is', null)
+  if (rangoActivo) {
+    if (desdeISO) queryRendimientos = queryRendimientos.gte('fecha_hora', desdeISO)
+    if (hastaISO) queryRendimientos = queryRendimientos.lte('fecha_hora', hastaISO)
+  }
+  const { data: rendimientosCargas } = await queryRendimientos
+
+  const litrosMostrados = rangoActivo
+    ? cargasPeriodo.reduce((sum, c) => sum + c.litros_cargados, 0)
+    : cargasHoy.reduce((sum, c) => sum + c.litros_cargados, 0)
+
+  const gastoMostrado = rangoActivo
+    ? cargasPeriodo.reduce((sum, c) => sum + c.total_pagado, 0)
+    : cargasMes.reduce((sum, c) => sum + c.total_pagado, 0)
+
+  const rendimientosBase = rangoActivo ? cargasPeriodo : cargasMes
+  const rendimientos = rendimientosBase.map((c) => c.rendimiento_km_l).filter((r): r is number => r != null)
   const rendimientoPromedio = rendimientos.length
     ? rendimientos.reduce((a, b) => a + b, 0) / rendimientos.length
     : 0
@@ -77,11 +123,45 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <BannerAvisos avisos={avisos} />
 
-      <h1 className="text-lg font-semibold text-slate-900">Dashboard</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-lg font-semibold text-slate-900">Dashboard</h1>
+      </div>
+
+      <form className="flex items-end gap-3 bg-white rounded-xl border border-slate-200 p-4">
+        <div>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Desde</label>
+          <input
+            type="date"
+            name="desde"
+            defaultValue={desde ?? ''}
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Hasta</label>
+          <input
+            type="date"
+            name="hasta"
+            defaultValue={hasta ?? ''}
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <button
+          type="submit"
+          className="rounded-md bg-brand hover:bg-brand-dark text-white text-sm font-medium px-4 py-2 transition-colors"
+        >
+          Filtrar
+        </button>
+        {rangoActivo ? (
+          <Link href="/dashboard" className="text-sm font-medium text-slate-500 hover:underline px-2 py-2">
+            Quitar filtro (hoy / este mes)
+          </Link>
+        ) : null}
+      </form>
 
       <div className="grid grid-cols-4 gap-4">
-        <TarjetaKpi label="Litros hoy" valor={formatoVolumen(litrosHoy, unidad, 0)} />
-        <TarjetaKpi label="Gasto del mes" valor={`$${gastoMes.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`} />
+        <TarjetaKpi label={rangoActivo ? 'Litros del periodo' : 'Litros hoy'} valor={formatoVolumen(litrosMostrados, unidad, 0)} />
+        <TarjetaKpi label={rangoActivo ? 'Gasto del periodo' : 'Gasto del mes'} valor={`$${gastoMostrado.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`} />
         <TarjetaKpi label="Rendimiento promedio" valor={formatoRendimiento(rendimientoPromedio, unidad)} />
         <TarjetaKpi label="Alertas activas" valor={String(totalAlertas)} destacado={totalAlertas > 0} />
       </div>

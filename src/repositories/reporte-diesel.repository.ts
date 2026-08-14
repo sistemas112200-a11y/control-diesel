@@ -47,20 +47,33 @@ interface AcumOperador {
 
 export async function getResumenDiesel(
   supabase: SupabaseClient,
-  opciones: { meses?: number; terminalId?: string } = {}
+  opciones: { meses?: number; terminalId?: string; desde?: string; hasta?: string } = {}
 ): Promise<ResumenDiesel> {
-  const meses = opciones.meses ?? 6
-  const desde = new Date()
-  desde.setMonth(desde.getMonth() - (meses - 1))
-  desde.setDate(1)
-  desde.setHours(0, 0, 0, 0)
+  let desdeISO: string
+  let hastaISO: string | null = null
+
+  if (opciones.desde) {
+    desdeISO = new Date(`${opciones.desde}T00:00:00`).toISOString()
+  } else {
+    const meses = opciones.meses ?? 6
+    const desde = new Date()
+    desde.setMonth(desde.getMonth() - (meses - 1))
+    desde.setDate(1)
+    desde.setHours(0, 0, 0, 0)
+    desdeISO = desde.toISOString()
+  }
+
+  if (opciones.hasta) {
+    hastaISO = new Date(`${opciones.hasta}T23:59:59.999`).toISOString()
+  }
 
   let query = supabase
     .from('cargas_combustible')
     .select('vehiculo_id, operador_id, fecha_hora, litros_cargados, total_pagado, rendimiento_km_l, vehiculos(numero_economico), operadores(nombre_completo)')
     .is('deleted_at', null)
-    .gte('fecha_hora', desde.toISOString())
+    .gte('fecha_hora', desdeISO)
 
+  if (hastaISO) query = query.lte('fecha_hora', hastaISO)
   if (opciones.terminalId) query = query.eq('terminal_id', opciones.terminalId)
 
   const { data, error } = await query
