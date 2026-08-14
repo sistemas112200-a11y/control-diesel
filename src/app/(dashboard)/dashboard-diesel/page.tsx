@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getResumenDiesel } from '@/repositories/reporte-diesel.repository'
 import { getUsuarioActual } from '@/lib/auth/session'
@@ -75,14 +76,11 @@ export default async function DashboardDieselPage({
         >
           Filtrar
         </button>
-        {rangoActivo && (
-          
-            href="/dashboard-diesel"
-            className="text-sm font-medium text-slate-500 hover:underline px-2 py-2"
-          >
+        {rangoActivo ? (
+          <Link href="/dashboard-diesel" className="text-sm font-medium text-slate-500 hover:underline px-2 py-2">
             Quitar filtro (ver últimos 6 meses)
-          </a>
-        )}
+          </Link>
+        ) : null}
       </form>
 
       <div className="grid grid-cols-3 gap-4">
