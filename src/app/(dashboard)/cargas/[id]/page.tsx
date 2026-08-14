@@ -3,9 +3,11 @@ import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCargaById } from '@/repositories/carga.repository'
 import { getUsuarioActual } from '@/lib/auth/session'
+import { getEmpresaById } from '@/repositories/empresa.repository'
 import { puede, puedeVerDetalleCargas } from '@/lib/auth/permissions'
 import { BotonEliminarCarga } from './boton-eliminar'
 import { formatoFechaHora } from '@/lib/fecha'
+import { formatoDistancia, formatoVolumen, formatoRendimiento, formatoCostoPorDistancia, formatoPrecioVolumen } from '@/lib/unidades'
 
 export default async function DetalleCargaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -16,6 +18,8 @@ export default async function DetalleCargaPage({ params }: { params: Promise<{ i
   }
 
   const supabase = await createClient()
+  const empresa = await getEmpresaById(supabase, usuarioActual.empresaId)
+  const unidad = empresa.unidad_medida
 
   let carga
   try {
@@ -62,15 +66,15 @@ export default async function DetalleCargaPage({ params }: { params: Promise<{ i
         <Dato label="Unidad" valor={vehiculo?.numero_economico ?? '—'} />
         <Dato label="Operador" valor={operador?.nombre_completo ?? '—'} />
         <Dato label="Fecha" valor={formatoFechaHora(carga.fecha_hora)} />
-        <Dato label="Kilometraje" valor={String(carga.kilometraje)} />
-        <Dato label="Litros cargados" valor={`${carga.litros_cargados} L`} />
-        <Dato label="Precio por litro" valor={`$${carga.precio_litro}`} />
+        <Dato label={unidad === 'imperial' ? 'Millaje' : 'Kilometraje'} valor={formatoDistancia(carga.kilometraje, unidad, 0)} />
+        <Dato label={unidad === 'imperial' ? 'Galones cargados' : 'Litros cargados'} valor={formatoVolumen(carga.litros_cargados, unidad, 2)} />
+        <Dato label={unidad === 'imperial' ? 'Precio por galón' : 'Precio por litro'} valor={formatoPrecioVolumen(carga.precio_litro, unidad)} />
         <Dato label="Total pagado" valor={`$${carga.total_pagado.toFixed(2)}`} />
         <Dato label="Método de pago" valor={carga.metodo_pago} />
         <Dato label="Folio de ticket" valor={carga.folio_ticket ?? '—'} />
-        <Dato label="Km recorridos" valor={carga.km_recorridos != null ? String(carga.km_recorridos) : '—'} />
-        <Dato label="Rendimiento" valor={carga.rendimiento_km_l != null ? `${carga.rendimiento_km_l.toFixed(2)} km/L` : '—'} />
-        <Dato label="Costo por km" valor={carga.costo_por_km != null ? `$${carga.costo_por_km.toFixed(2)}` : '—'} />
+        <Dato label={unidad === 'imperial' ? 'Millas recorridas' : 'Km recorridos'} valor={carga.km_recorridos != null ? formatoDistancia(carga.km_recorridos, unidad, 0) : '—'} />
+        <Dato label="Rendimiento" valor={carga.rendimiento_km_l != null ? formatoRendimiento(carga.rendimiento_km_l, unidad) : '—'} />
+        <Dato label={unidad === 'imperial' ? 'Costo por milla' : 'Costo por km'} valor={carga.costo_por_km != null ? formatoCostoPorDistancia(carga.costo_por_km, unidad) : '—'} />
         <Dato label="Capturado por" valor={capturadaPor?.nombre_completo ?? '—'} />
         {carga.observaciones && (
           <div className="col-span-2">

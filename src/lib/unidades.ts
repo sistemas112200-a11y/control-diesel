@@ -56,6 +56,17 @@ export function formatoCostoPorDistancia(costoPorKm: number, unidad: SistemaUnid
   return `$${costoPorKm.toFixed(2)}/km`
 }
 
+export function formatoPrecioVolumen(precioLitro: number, unidad: SistemaUnidades): string {
+  if (unidad === 'imperial') {
+    return `$${(precioLitro * LITROS_POR_GALON).toFixed(2)}/gal`
+  }
+  return `$${precioLitro.toFixed(2)}/L`
+}
+
+export function precioPorGalonAPorLitro(precioGalon: number): number {
+  return precioGalon / LITROS_POR_GALON
+}
+
 export const ETIQUETA_DISTANCIA: Record<SistemaUnidades, string> = { metrico: 'km', imperial: 'mi' }
 export const ETIQUETA_VOLUMEN: Record<SistemaUnidades, string> = { metrico: 'L', imperial: 'gal' }
 export const ETIQUETA_RENDIMIENTO: Record<SistemaUnidades, string> = { metrico: 'km/L', imperial: 'MPG' }

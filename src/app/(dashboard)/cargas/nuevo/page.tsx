@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getVehiculos, getVehiculoById } from '@/repositories/vehiculo.repository'
+import { getUsuarioActual } from '@/lib/auth/session'
+import { getEmpresaById } from '@/repositories/empresa.repository'
 import { FormularioNuevaCarga } from './formulario'
 
 export default async function NuevaCargaPage({
@@ -32,6 +34,10 @@ export default async function NuevaCargaPage({
     }
   }
 
+  const usuarioActual = await getUsuarioActual()
+  const empresa = await getEmpresaById(supabase, usuarioActual!.empresaId)
+  const unidad = empresa.unidad_medida
+
   const todosLosVehiculos = await getVehiculos(supabase)
   const vehiculos = todosLosVehiculos.filter((v) => v.estado === 'activo')
 
@@ -58,6 +64,7 @@ export default async function NuevaCargaPage({
         vehiculoIdPreseleccionado={vehiculo_id}
         vehiculos={vehiculos.map((v) => ({ value: v.id, label: v.numero_economico }))}
         operadores={(operadores ?? []).map((o) => ({ value: o.id, label: o.nombre_completo }))}
+        unidadMedida={unidad}
       />
     </div>
   )

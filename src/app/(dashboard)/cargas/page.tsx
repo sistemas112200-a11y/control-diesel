@@ -2,7 +2,9 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getCargas } from '@/repositories/carga.repository'
 import { getUsuarioActual } from '@/lib/auth/session'
+import { getEmpresaById } from '@/repositories/empresa.repository'
 import { puedeVerDetalleCargas } from '@/lib/auth/permissions'
+import { formatoDistancia, formatoVolumen, formatoRendimiento } from '@/lib/unidades'
 
 function formatoFechaHora(fechaHora: string) {
   return new Date(fechaHora).toLocaleString('es-MX', {
@@ -23,16 +25,19 @@ export default async function CargasPage({
 }) {
   const { alerta, q } = await searchParams
   const supabase = await createClient()
-  const todasLasCargas = await getCargas(supabase)
   const usuarioActual = await getUsuarioActual()
+  const empresa = await getEmpresaById(supabase, usuarioActual!.empresaId)
+  const unidad = empresa.unidad_medida
+
+  const todasLasCargas = await getCargas(supabase)
   const mostrarDetalle = usuarioActual ? puedeVerDetalleCargas(usuarioActual.rol) : false
 
   const cargas = q
     ? todasLasCargas.filter((c) => {
-        const unidad = (c as any).vehiculos?.numero_economico ?? ''
+        const unidadVehiculo = (c as any).vehiculos?.numero_economico ?? ''
         const folio = c.folio_ticket ?? ''
         const termino = q.toLowerCase()
-        return unidad.toLowerCase().includes(termino) || folio.toLowerCase().includes(termino)
+        return unidadVehiculo.toLowerCase().includes(termino) || folio.toLowerCase().includes(termino)
       })
     : todasLasCargas
 
@@ -70,8 +75,8 @@ export default async function CargasPage({
             <tr>
               <th className="text-left px-4 py-3">Unidad</th>
               <th className="text-left px-4 py-3">Fecha</th>
-              <th className="text-left px-4 py-3">Kilometraje</th>
-              <th className="text-left px-4 py-3">Litros</th>
+              <th className="text-left px-4 py-3">{unidad === 'imperial' ? 'Millaje' : 'Kilometraje'}</th>
+              <th className="text-left px-4 py-3">{unidad === 'imperial' ? 'Galones' : 'Litros'}</th>
               <th className="text-left px-4 py-3">Total</th>
               <th className="text-left px-4 py-3">Rendimiento</th>
               {mostrarDetalle && <th className="text-left px-4 py-3">Detalle</th>}
@@ -89,10 +94,10 @@ export default async function CargasPage({
                 <tr key={c.id}>
                   <td className="px-4 py-3 font-medium text-slate-900">{(c as any).vehiculos?.numero_economico ?? '—'}</td>
                   <td className="px-4 py-3 text-slate-600">{formatoFechaHora(c.fecha_hora)}</td>
-                  <td className="px-4 py-3 text-slate-600">{c.kilometraje}</td>
-                  <td className="px-4 py-3 text-slate-600">{c.litros_cargados} L</td>
+                  <td className="px-4 py-3 text-slate-600">{formatoDistancia(c.kilometraje, unidad, 0)}</td>
+                  <td className="px-4 py-3 text-slate-600">{formatoVolumen(c.litros_cargados, unidad, 2)}</td>
                   <td className="px-4 py-3 text-slate-600">${c.total_pagado.toFixed(2)}</td>
-                  <td className="px-4 py-3 text-slate-600">{c.rendimiento_km_l ? `${c.rendimiento_km_l.toFixed(2)} km/L` : '—'}</td>
+                  <td className="px-4 py-3 text-slate-600">{c.rendimiento_km_l ? formatoRendimiento(c.rendimiento_km_l, unidad) : '—'}</td>
                   {mostrarDetalle && (
                     <td className="px-4 py-3">
                       <Link href={`/cargas/${c.id}`} className="text-brand-dark hover:underline font-medium">
