@@ -1,314 +1,153 @@
-export type RolUsuario = 'administrador' | 'supervisor' | 'capturista' | 'operador' | 'contabilidad' | 'auditor' | 'guardia' | 'desarrollador'
-export type EstadoVehiculo = 'activo' | 'taller' | 'baja'
-export type EstadoVale = 'pendiente' | 'autorizado' | 'usado' | 'cancelado'
-export type MetodoPago = 'efectivo' | 'tarjeta_empresa' | 'transferencia' | 'credito_proveedor' | 'vale'
-export type TipoAlerta =
-  | 'rendimiento_bajo' | 'carga_duplicada' | 'litros_fuera_rango'
-  | 'consumo_excesivo' | 'sin_movimiento' | 'ticket_repetido' | 'posible_robo'
-  | 'mantenimiento_vencido'
-export type SeveridadAlerta = 'info' | 'advertencia' | 'critica'
-export type EstadoAlerta = 'nueva' | 'revisada' | 'descartada'
-export type TipoMantenimiento = 'preventivo' | 'correctivo'
-export type EstadoReporte = 'abierta' | 'asignada' | 'en_proceso' | 'espera_refacciones' | 'completada'
-export type PrioridadOrden = 'alta' | 'media' | 'baja'
-export type SistemaUnidades = 'metrico' | 'imperial'
+import Link from 'next/link'
+import { getUsuarioActual } from '@/lib/auth/session'
+import { createClient } from '@/lib/supabase/server'
+import { getEmpresaById } from '@/repositories/empresa.repository'
+import { ETIQUETA_VOLUMEN, ETIQUETA_RENDIMIENTO } from '@/lib/unidades'
+import { crearVehiculoAction } from './actions'
 
-export interface Empresa {
-  id: string
-  nombre: string
-  rfc: string | null
-  unidad_medida: SistemaUnidades
-  limite_usuarios: number | null
-  limite_vehiculos: number | null
-  created_at: string
-  updated_at: string
-}
+export default async function NuevoVehiculoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>
+}) {
+  const { error } = await searchParams
+  const usuario = await getUsuarioActual()
+  const supabase = await createClient()
+  const empresa = await getEmpresaById(supabase, usuario!.empresaId)
+  const unidad = empresa.unidad_medida
 
-export interface Terminal {
-  id: string
-  empresa_id: string
-  nombre: string
-  ubicacion: string | null
-  created_at: string
-  updated_at: string
-}
+  return (
+    <div className="max-w-2xl mx-auto space-y-6">
+      <div>
+        <Link href="/vehiculos" className="text-xs font-medium text-brand-dark hover:underline">
+          ← Vehículos
+        </Link>
+        <h1 className="text-lg font-semibold text-slate-900 mt-1">Nuevo vehículo</h1>
+      </div>
 
-export interface Usuario {
-  id: string
-  nombre_completo: string
-  rol: RolUsuario
-  empresa_id: string
-  activo: boolean
-  created_at: string
-  updated_at: string
-}
+      {error && (
+        <div className="rounded-md bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3">
+          {decodeURIComponent(error)}
+        </div>
+      )}
 
-export interface ModuloEmpresa {
-  empresa_id: string
-  modulo: string
-  activo: boolean
-}
+      <form action={crearVehiculoAction} className="bg-white rounded-xl border border-slate-200 p-6 space-y-5">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Número económico *</label>
+            <input
+              type="text"
+              name="numero_economico"
+              required
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Placas</label>
+            <input
+              type="text"
+              name="placas"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            />
+          </div>
+        </div>
 
-export interface Proveedor {
-  id: string
-  empresa_id: string
-  nombre: string
-  rfc: string | null
-  contacto: string | null
-  telefono: string | null
-  created_at: string
-  updated_at: string
-}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Marca</label>
+            <input
+              type="text"
+              name="marca"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Modelo</label>
+            <input
+              type="text"
+              name="modelo"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            />
+          </div>
+        </div>
 
-export interface Vehiculo {
-  id: string
-  empresa_id: string
-  terminal_id: string
-  numero_economico: string
-  placas: string | null
-  marca: string | null
-  modelo: string | null
-  anio: number | null
-  tipo_combustible: string
-  capacidad_tanque1_litros: number
-  capacidad_tanque2_litros: number | null
-  rendimiento_esperado_km_l: number
-  estado: EstadoVehiculo
-  foto_url: string | null
-  km_actual: number
-  intervalo_mantenimiento_km: number | null
-  numero_llantas: number
-  tiene_eje_delantero: boolean
-  created_at: string
-  updated_at: string
-  deleted_at: string | null
-}
+        <div>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Año</label>
+          <input
+            type="number"
+            name="anio"
+            className="w-full max-w-[160px] rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </div>
 
-export interface Operador {
-  id: string
-  empresa_id: string
-  nombre_completo: string
-  licencia_numero: string | null
-  licencia_vigencia: string | null
-  telefono: string | null
-  direccion: string | null
-  fecha_ingreso: string | null
-  activo: boolean
-  created_at: string
-  updated_at: string
-  deleted_at: string | null
-}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">
+              Capacidad tanque ({ETIQUETA_VOLUMEN[unidad]}) *
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              name="capacidad_tanque1_litros"
+              required
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">
+              Rendimiento esperado ({ETIQUETA_RENDIMIENTO[unidad]}) *
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              name="rendimiento_esperado_km_l"
+              required
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            />
+          </div>
+        </div>
 
-export interface Mecanico {
-  id: string
-  empresa_id: string
-  nombre_completo: string
-  telefono: string | null
-  especialidad: string | null
-  activo: boolean
-  created_at: string
-  updated_at: string
-  deleted_at: string | null
-}
+        <div className="grid grid-cols-2 gap-4 items-end">
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Número de llantas</label>
+            <input
+              type="number"
+              name="numero_llantas"
+              defaultValue="6"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                name="tiene_eje_delantero"
+                defaultChecked
+                className="rounded border-slate-300"
+              />
+              Tiene eje delantero
+            </label>
+            <p className="text-[11px] text-slate-400">
+              Desmárcalo para dollys (sin eje delantero propio).
+            </p>
+          </div>
+        </div>
 
-export interface ValeCombustible {
-  id: string
-  folio: string
-  terminal_id: string
-  vehiculo_id: string
-  operador_id: string
-  cantidad_autorizada_litros: number
-  fecha: string
-  estado: EstadoVale
-  responsable_id: string | null
-  evidencia_url: string | null
-  created_at: string
-  updated_at: string
-}
-
-export interface CompraDiesel {
-  id: string
-  empresa_id: string
-  terminal_id: string
-  proveedor_id: string
-  numero_factura: string
-  fecha: string
-  cantidad_litros: number
-  precio_unitario: number
-  iva: number
-  total: number
-  forma_pago: MetodoPago
-  factura_pdf_url: string | null
-  factura_xml_url: string | null
-  created_at: string
-  updated_at: string
-  deleted_at: string | null
-}
-
-export interface CargaCombustible {
-  id: string
-  terminal_id: string
-  vehiculo_id: string
-  operador_id: string
-  vale_id: string | null
-  proveedor_id: string | null
-  estacion_id: string | null
-  fecha_hora: string
-  kilometraje: number
-  horometro: number | null
-  litros_cargados: number
-  precio_litro: number
-  total_pagado: number
-  metodo_pago: MetodoPago
-  folio_ticket: string | null
-  foto_ticket_url: string
-  foto_kilometraje_url: string
-  foto_bomba_url: string
-  foto_tanque1_url: string
-  foto_tanque2_url: string | null
-  ubicacion_lat: number | null
-  ubicacion_lng: number | null
-  observaciones: string | null
-  km_recorridos: number | null
-  rendimiento_km_l: number | null
-  costo_por_km: number | null
-  created_by: string
-  created_at: string
-  updated_at: string
-  deleted_at: string | null
-}
-
-export interface Alerta {
-  id: string
-  terminal_id: string
-  tipo: TipoAlerta
-  severidad: SeveridadAlerta
-  estado: EstadoAlerta
-  vehiculo_id: string | null
-  operador_id: string | null
-  carga_id: string | null
-  descripcion: string
-  responsable_id: string | null
-  created_at: string
-  updated_at: string
-}
-
-export interface Mantenimiento {
-  id: string
-  terminal_id: string
-  vehiculo_id: string
-  tipo: TipoMantenimiento
-  descripcion: string
-  kilometraje: number
-  intervalo_km: number | null
-  intervalo_dias: number | null
-  aviso_km: number | null
-  aviso_dias: number | null
-  fecha: string
-  created_by: string | null
-  created_at: string
-  updated_at: string
-  deleted_at: string | null
-}
-
-export interface ReporteUnidad {
-  id: string
-  terminal_id: string
-  vehiculo_id: string
-  descripcion: string
-  estado: EstadoReporte
-  prioridad: PrioridadOrden
-  mantenimiento_id: string | null
-  mecanico_id: string | null
-  tomado_por: string | null
-  operador_id: string | null
-  posible_falla: string | null
-  solucion: string | null
-  firma_url: string | null
-  folio: string
-  fecha_solucion: string | null
-  created_by: string | null
-  created_at: string
-  updated_at: string
-  deleted_at: string | null
-}
-
-export interface RefaccionReporte {
-  id: string
-  reporte_id: string
-  terminal_id: string
-  descripcion: string
-  cantidad: number
-  costo: number
-  created_by: string | null
-  created_at: string
-}
-
-export interface PaseSalida {
-  id: string
-  terminal_id: string
-  vehiculo_id: string
-  destino: string | null
-  firma1_nombre: string | null
-  firma1_url: string | null
-  firma2_nombre: string | null
-  firma2_url: string | null
-  firma3_nombre: string | null
-  firma3_url: string | null
-  created_by: string | null
-  created_at: string
-  deleted_at: string | null
-}
-
-export type TipoAviso = 'info' | 'advertencia' | 'critica'
-
-export interface Aviso {
-  id: string
-  empresa_id: string | null
-  mensaje: string
-  tipo: TipoAviso
-  activo: boolean
-  expira_at: string | null
-  created_by: string | null
-  created_at: string
-}
-
-export type EstadoSalida = 'abierta' | 'cerrada'
-
-export interface Producto {
-  id: string
-  empresa_id: string
-  codigo: string
-  nombre: string
-  descripcion: string | null
-  unidad_medida: string
-  existencia: number
-  stock_minimo: number | null
-  activo: boolean
-  created_at: string
-  updated_at: string
-  deleted_at: string | null
-}
-
-export interface SalidaAlmacen {
-  id: string
-  terminal_id: string
-  vehiculo_id: string
-  mecanico_id: string | null
-  estado: EstadoSalida
-  folio: string
-  firma_url: string | null
-  created_by: string | null
-  created_at: string
-  updated_at: string
-  cerrada_at: string | null
-  deleted_at: string | null
-}
-
-export interface SalidaDetalle {
-  id: string
-  salida_id: string
-  producto_id: string
-  cantidad: number
-  created_at: string
+        <div className="flex justify-end gap-3 pt-2">
+          <Link
+            href="/vehiculos"
+            className="rounded-md border border-slate-300 text-slate-600 text-sm font-medium px-4 py-2 hover:bg-slate-50"
+          >
+            Cancelar
+          </Link>
+          <button
+            type="submit"
+            className="rounded-md bg-brand hover:bg-brand-dark text-white text-sm font-medium px-4 py-2 transition-colors"
+          >
+            Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  )
 }
