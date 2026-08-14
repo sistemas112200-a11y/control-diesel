@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { crearCargaAction } from './actions'
 import { BuscadorUnidad } from '@/components/ui/buscador-unidad'
+import type { SistemaUnidades } from '@/lib/unidades'
 
 async function subirFoto(archivo: File | null, prefijo: string): Promise<string | undefined> {
   if (!archivo || archivo.size === 0) return undefined
@@ -20,14 +21,18 @@ export function FormularioNuevaCarga({
   vehiculoIdPreseleccionado,
   vehiculos,
   operadores,
+  unidadMedida,
 }: {
   terminalId: string
   vehiculoIdPreseleccionado?: string
   vehiculos: { value: string; label: string }[]
   operadores: { value: string; label: string }[]
+  unidadMedida: SistemaUnidades
 }) {
   const [subiendo, setSubiendo] = useState(false)
   const [error, setError] = useState('')
+
+  const esImperial = unidadMedida === 'imperial'
 
   async function manejarEnvio(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -122,12 +127,12 @@ export function FormularioNuevaCarga({
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
-        <Campo label="Kilometraje" name="kilometraje" type="number" required />
+        <Campo label={esImperial ? 'Millaje' : 'Kilometraje'} name="kilometraje" type="number" required />
         <Campo label="Folio de ticket" name="folio_ticket" />
       </div>
       <div className="grid grid-cols-2 gap-4">
-        <Campo label="Litros cargados" name="litros_cargados" type="number" step="0.01" required />
-        <Campo label="Precio por litro" name="precio_litro" type="number" step="0.01" required />
+        <Campo label={esImperial ? 'Galones cargados' : 'Litros cargados'} name="litros_cargados" type="number" step="0.01" required />
+        <Campo label={esImperial ? 'Precio por galón' : 'Precio por litro'} name="precio_litro" type="number" step="0.01" required />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
@@ -147,7 +152,7 @@ export function FormularioNuevaCarga({
       </p>
       <div className="grid grid-cols-2 gap-4">
         <Foto label="Foto del ticket (opcional)" name="foto_ticket" />
-        <Foto label="Foto del kilometraje (opcional)" name="foto_kilometraje" />
+        <Foto label={esImperial ? 'Foto del millaje (opcional)' : 'Foto del kilometraje (opcional)'} name="foto_kilometraje" />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <Foto label="Foto de la bomba (opcional)" name="foto_bomba" />
