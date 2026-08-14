@@ -1,8 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { getResumenDiesel } from '@/repositories/reporte-diesel.repository'
+import { getUsuarioActual } from '@/lib/auth/session'
+import { getEmpresaById } from '@/repositories/empresa.repository'
 import { GraficaBarras } from '@/components/ui/grafica-barras'
 import { TablaUnidadesDiesel } from '@/components/ui/tabla-unidades-diesel'
 import { TablaOperadoresDiesel } from '@/components/ui/tabla-operadores-diesel'
+import { formatoVolumen, formatoRendimiento } from '@/lib/unidades'
 
 const MESES_LABEL: Record<string, string> = {
   '01': 'Ene', '02': 'Feb', '03': 'Mar', '04': 'Abr', '05': 'May', '06': 'Jun',
@@ -14,16 +17,16 @@ function formatearMes(mesKey: string) {
   return `${MESES_LABEL[mes] ?? mes} ${anio.slice(2)}`
 }
 
-function formatoLitros(v: number) {
-  return `${v.toLocaleString('es-MX', { maximumFractionDigits: 0 })} L`
-}
-
 function formatoDinero(v: number) {
   return `$${v.toLocaleString('es-MX', { maximumFractionDigits: 0 })}`
 }
 
 export default async function DashboardDieselPage() {
   const supabase = await createClient()
+  const usuario = await getUsuarioActual()
+  const empresa = await getEmpresaById(supabase, usuario!.empresaId)
+  const unidad = empresa.unidad_medida
+
   const resumen = await getResumenDiesel(supabase, { meses: 6 })
 
   const datosLitrosMes = resumen.porMes.map((m) => ({ etiqueta: formatearMes(m.mes), valor: m.litros }))
@@ -37,18 +40,18 @@ export default async function DashboardDieselPage() {
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        <TarjetaKpi titulo="Litros cargados" valor={formatoLitros(resumen.litrosTotal)} />
+        <TarjetaKpi titulo={unidad === 'imperial' ? 'Galones cargados' : 'Litros cargados'} valor={formatoVolumen(resumen.litrosTotal, unidad, 0)} />
         <TarjetaKpi titulo="Gasto total" valor={formatoDinero(resumen.gastoTotal)} />
         <TarjetaKpi
           titulo="Rendimiento promedio"
-          valor={resumen.rendimientoPromedio != null ? `${resumen.rendimientoPromedio.toFixed(2)} km/L` : '—'}
+          valor={resumen.rendimientoPromedio != null ? formatoRendimiento(resumen.rendimientoPromedio, unidad) : '—'}
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h2 className="text-sm font-semibold text-slate-900 mb-4">Litros por mes</h2>
-          <GraficaBarras datos={datosLitrosMes} formatoValor={formatoLitros} color="#378add" />
+          <h2 className="text-sm font-semibold text-slate-900 mb-4">{unidad === 'imperial' ? 'Galones por mes' : 'Litros por mes'}</h2>
+          <GraficaBarras datos={datosLitrosMes} formatoValor={(v) => formatoVolumen(v, unidad, 0)} color="#378add" />
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <h2 className="text-sm font-semibold text-slate-900 mb-4">Gasto por mes</h2>
@@ -58,13 +61,15 @@ export default async function DashboardDieselPage() {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <h2 className="text-sm font-semibold text-slate-900 px-6 pt-6 pb-2">Litros y gasto por unidad</h2>
-          <TablaUnidadesDiesel datos={resumen.porUnidad} />
+          <h2 className="text-sm font-semibold text-slate-900 px-6 pt-6 pb-2">
+            {unidad === 'imperial' ? 'Galones y gasto por unidad' : 'Litros y gasto por unidad'}
+          </h2>
+          <TablaUnidadesDiesel datos={resumen.porUnidad} unidadMedida={unidad} />
         </div>
 
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           <h2 className="text-sm font-semibold text-slate-900 px-6 pt-6 pb-2">Rendimiento por operador</h2>
-          <TablaOperadoresDiesel datos={resumen.porOperador} />
+          <TablaOperadoresDiesel datos={resumen.porOperador} unidadMedida={unidad} />
         </div>
       </div>
 
@@ -78,7 +83,7 @@ export default async function DashboardDieselPage() {
               {resumen.mejoresUnidades.map((u, i) => (
                 <li key={u.vehiculoId} className="flex items-center justify-between text-sm">
                   <span className="text-slate-700">{i + 1}. {u.unidad}</span>
-                  <span className="font-medium text-green-700">{u.rendimientoPromedio!.toFixed(2)} km/L</span>
+                  <span className="font-medium text-green-700">{formatoRendimiento(u.rendimientoPromedio!, unidad)}</span>
                 </li>
               ))}
             </ol>
@@ -93,7 +98,7 @@ export default async function DashboardDieselPage() {
               {resumen.mejoresOperadores.map((o, i) => (
                 <li key={o.operadorId} className="flex items-center justify-between text-sm">
                   <span className="text-slate-700">{i + 1}. {o.operador}</span>
-                  <span className="font-medium text-green-700">{o.rendimientoPromedio!.toFixed(2)} km/L</span>
+                  <span className="font-medium text-green-700">{formatoRendimiento(o.rendimientoPromedio!, unidad)}</span>
                 </li>
               ))}
             </ol>

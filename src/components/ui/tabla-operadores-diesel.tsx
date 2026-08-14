@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { formatoRendimiento, type SistemaUnidades } from '@/lib/unidades'
 
 interface FilaOperador {
   operadorId: string
@@ -11,7 +12,7 @@ interface FilaOperador {
 
 type Columna = 'operador' | 'cargas' | 'rendimiento'
 
-export function TablaOperadoresDiesel({ datos }: { datos: FilaOperador[] }) {
+export function TablaOperadoresDiesel({ datos, unidadMedida }: { datos: FilaOperador[]; unidadMedida: SistemaUnidades }) {
   const [columna, setColumna] = useState<Columna>('operador')
   const [direccion, setDireccion] = useState<'asc' | 'desc'>('asc')
 
@@ -70,7 +71,7 @@ export function TablaOperadoresDiesel({ datos }: { datos: FilaOperador[] }) {
               <td className="px-4 py-2 font-medium text-slate-900">{o.operador}</td>
               <td className="px-4 py-2 text-right text-slate-600">{o.cargas}</td>
               <td className="px-4 py-2 text-right text-slate-600">
-                {o.rendimientoPromedio != null ? `${o.rendimientoPromedio.toFixed(2)} km/L` : '—'}
+                {o.rendimientoPromedio != null ? formatoRendimiento(o.rendimientoPromedio, unidadMedida) : '—'}
               </td>
             </tr>
           ))

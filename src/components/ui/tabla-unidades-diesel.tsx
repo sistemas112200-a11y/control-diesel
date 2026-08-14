@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { formatoVolumen, formatoRendimiento, type SistemaUnidades } from '@/lib/unidades'
 
 interface FilaUnidad {
   vehiculoId: string
@@ -12,15 +13,11 @@ interface FilaUnidad {
 
 type Columna = 'unidad' | 'litros' | 'gasto' | 'rendimiento'
 
-function formatoLitros(v: number) {
-  return `${v.toLocaleString('es-MX', { maximumFractionDigits: 0 })} L`
-}
-
 function formatoDinero(v: number) {
   return `$${v.toLocaleString('es-MX', { maximumFractionDigits: 0 })}`
 }
 
-export function TablaUnidadesDiesel({ datos }: { datos: FilaUnidad[] }) {
+export function TablaUnidadesDiesel({ datos, unidadMedida }: { datos: FilaUnidad[]; unidadMedida: SistemaUnidades }) {
   const [columna, setColumna] = useState<Columna>('unidad')
   const [direccion, setDireccion] = useState<'asc' | 'desc'>('asc')
 
@@ -68,7 +65,7 @@ export function TablaUnidadesDiesel({ datos }: { datos: FilaUnidad[] }) {
       <thead className="bg-slate-50 text-slate-500 text-xs uppercase">
         <tr>
           <Encabezado col="unidad" etiqueta="Unidad" />
-          <Encabezado col="litros" etiqueta="Litros" alinear="right" />
+          <Encabezado col="litros" etiqueta={unidadMedida === 'imperial' ? 'Galones' : 'Litros'} alinear="right" />
           <Encabezado col="gasto" etiqueta="Gasto" alinear="right" />
           <Encabezado col="rendimiento" etiqueta="Rendimiento" alinear="right" />
         </tr>
@@ -80,10 +77,10 @@ export function TablaUnidadesDiesel({ datos }: { datos: FilaUnidad[] }) {
           datosOrdenados.map((u) => (
             <tr key={u.vehiculoId}>
               <td className="px-4 py-2 font-medium text-slate-900">{u.unidad}</td>
-              <td className="px-4 py-2 text-right text-slate-600">{formatoLitros(u.litros)}</td>
+              <td className="px-4 py-2 text-right text-slate-600">{formatoVolumen(u.litros, unidadMedida, 0)}</td>
               <td className="px-4 py-2 text-right text-slate-600">{formatoDinero(u.gasto)}</td>
               <td className="px-4 py-2 text-right text-slate-600">
-                {u.rendimientoPromedio != null ? `${u.rendimientoPromedio.toFixed(2)} km/L` : '—'}
+                {u.rendimientoPromedio != null ? formatoRendimiento(u.rendimientoPromedio, unidadMedida) : '—'}
               </td>
             </tr>
           ))
