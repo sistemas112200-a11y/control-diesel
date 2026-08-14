@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getAlertas } from '@/repositories/alerta.repository'
 import { cambiarEstadoAlertaAction } from './actions'
 import type { EstadoAlerta } from '@/lib/supabase/types'
+import { formatoFechaHoraCorta } from '@/lib/fecha'
 
 const TIPO_LABEL: Record<string, string> = {
   rendimiento_bajo: 'Rendimiento bajo',
@@ -91,7 +92,7 @@ export default async function AlertasPage({
               alertas.map((a) => (
                 <tr key={a.id}>
                   <td className="px-4 py-3 text-slate-600 whitespace-nowrap">
-                    {new Date(a.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}
+                    {formatoFechaHoraCorta(a.created_at)}
                   </td>
                   <td className="px-4 py-3 text-slate-900 font-medium">{TIPO_LABEL[a.tipo] ?? a.tipo}</td>
                   <td className="px-4 py-3">

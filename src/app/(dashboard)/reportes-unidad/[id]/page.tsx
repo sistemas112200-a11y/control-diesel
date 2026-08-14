@@ -6,6 +6,7 @@ import { FirmaPad } from '@/components/ui/firma-pad'
 import { OrdenPrioridad } from '@/components/ui/orden-prioridad'
 import { OrdenMecanico } from '@/components/ui/orden-mecanico'
 import { ESTADO_LABEL, ESTADO_COLOR } from '@/lib/ordenes-trabajo'
+import { formatoFechaHora } from '@/lib/fecha'
 import {
   tomarReporteAction,
   iniciarTrabajoAction,
@@ -63,7 +64,7 @@ export default async function ReporteDetallePage({
             </span>
             <OrdenPrioridad id={reporte.id} prioridad={reporte.prioridad} />
           </div>
-          <span className="text-xs text-slate-500">{new Date(reporte.created_at).toLocaleString('es-MX')}</span>
+          <span className="text-xs text-slate-500">{formatoFechaHora(reporte.created_at)}</span>
         </div>
 
         <div className="flex items-center gap-2">

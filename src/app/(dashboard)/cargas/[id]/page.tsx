@@ -5,6 +5,7 @@ import { getCargaById } from '@/repositories/carga.repository'
 import { getUsuarioActual } from '@/lib/auth/session'
 import { puede, puedeVerDetalleCargas } from '@/lib/auth/permissions'
 import { BotonEliminarCarga } from './boton-eliminar'
+import { formatoFechaHora } from '@/lib/fecha'
 
 export default async function DetalleCargaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -60,7 +61,7 @@ export default async function DetalleCargaPage({ params }: { params: Promise<{ i
       <div className="bg-white rounded-xl border border-slate-200 p-6 grid grid-cols-2 gap-4 text-sm">
         <Dato label="Unidad" valor={vehiculo?.numero_economico ?? '—'} />
         <Dato label="Operador" valor={operador?.nombre_completo ?? '—'} />
-        <Dato label="Fecha" valor={new Date(carga.fecha_hora).toLocaleString('es-MX')} />
+        <Dato label="Fecha" valor={formatoFechaHora(carga.fecha_hora)} />
         <Dato label="Kilometraje" valor={String(carga.kilometraje)} />
         <Dato label="Litros cargados" valor={`${carga.litros_cargados} L`} />
         <Dato label="Precio por litro" valor={`$${carga.precio_litro}`} />

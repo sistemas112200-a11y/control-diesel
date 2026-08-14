@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getPasesSalida } from '@/repositories/pase-salida.repository'
+import { formatoFechaHora } from '@/lib/fecha'
 
 export default async function PasesSalidaPage() {
   const supabase = await createClient()
@@ -32,7 +33,7 @@ export default async function PasesSalidaPage() {
                 const firmas = [p.firma1_nombre, p.firma2_nombre, p.firma3_nombre].filter(Boolean).length
                 return (
                   <tr key={p.id}>
-                    <td className="px-4 py-3 text-slate-600">{new Date(p.created_at).toLocaleString('es-MX')}</td>
+                    <td className="px-4 py-3 text-slate-600">{formatoFechaHora(p.created_at)}</td>
                     <td className="px-4 py-3 font-medium text-slate-900">{p.vehiculos?.numero_economico ?? '—'}</td>
                     <td className="px-4 py-3 text-slate-600">{p.destino ?? '—'}</td>
                     <td className="px-4 py-3 text-slate-600">{firmas} de 3</td>

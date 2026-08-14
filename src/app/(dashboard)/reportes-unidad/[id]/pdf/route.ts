@@ -3,6 +3,7 @@ import { jsPDF } from 'jspdf'
 import { createClient } from '@/lib/supabase/server'
 import { getReporteById, getRefaccionesPorReporte } from '@/repositories/reporte.repository'
 import { getUsuarioActual } from '@/lib/auth/session'
+import { formatoFechaHora } from '@/lib/fecha'
 
 const ESTADO_LABEL: Record<string, string> = {
   abierto: 'Abierto',
@@ -72,7 +73,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     ['Unidad', reporte.vehiculos?.numero_economico ?? '—'],
     ['Estado', ESTADO_LABEL[reporte.estado]],
     ['Operador que reporta', reporte.operadores?.nombre_completo ?? '—'],
-    ['Fecha del reporte', new Date(reporte.created_at).toLocaleString('es-MX')],
+    ['Fecha del reporte', formatoFechaHora(reporte.created_at)],
   ]
   const altoCaja = 32
   doc.setFillColor(...GRIS_CLARO)
@@ -128,7 +129,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     if (reporte.fecha_solucion) {
       doc.setFontSize(8)
       doc.setTextColor(...GRIS_SUAVE)
-      doc.text(`Fecha de solución: ${new Date(reporte.fecha_solucion).toLocaleString('es-MX')}`, margen, y)
+      doc.text(`Fecha de solución: ${formatoFechaHora(reporte.fecha_solucion)}`, margen, y)
       y += 8
     }
   }

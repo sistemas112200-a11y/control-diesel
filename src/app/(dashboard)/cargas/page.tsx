@@ -4,6 +4,18 @@ import { getCargas } from '@/repositories/carga.repository'
 import { getUsuarioActual } from '@/lib/auth/session'
 import { puedeVerDetalleCargas } from '@/lib/auth/permissions'
 
+function formatoFechaHora(fechaHora: string) {
+  return new Date(fechaHora).toLocaleString('es-MX', {
+    timeZone: 'America/Chihuahua',
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  })
+}
+
 export default async function CargasPage({
   searchParams,
 }: {
@@ -76,7 +88,7 @@ export default async function CargasPage({
               cargas.map((c) => (
                 <tr key={c.id}>
                   <td className="px-4 py-3 font-medium text-slate-900">{(c as any).vehiculos?.numero_economico ?? '—'}</td>
-                  <td className="px-4 py-3 text-slate-600">{new Date(c.fecha_hora).toLocaleString('es-MX')}</td>
+                  <td className="px-4 py-3 text-slate-600">{formatoFechaHora(c.fecha_hora)}</td>
                   <td className="px-4 py-3 text-slate-600">{c.kilometraje}</td>
                   <td className="px-4 py-3 text-slate-600">{c.litros_cargados} L</td>
                   <td className="px-4 py-3 text-slate-600">${c.total_pagado.toFixed(2)}</td>

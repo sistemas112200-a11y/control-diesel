@@ -3,6 +3,7 @@ import { jsPDF } from 'jspdf'
 import { createClient } from '@/lib/supabase/server'
 import { getPaseSalidaById } from '@/repositories/pase-salida.repository'
 import { getUsuarioActual } from '@/lib/auth/session'
+import { formatoFechaHora } from '@/lib/fecha'
 
 const AZUL_OSCURO: [number, number, number] = [15, 23, 42]
 const AZUL: [number, number, number] = [29, 78, 216]
@@ -44,7 +45,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const datos: [string, string][] = [
     ['Unidad', pase.vehiculos?.numero_economico ?? '—'],
     ['Destino / ruta', pase.destino ?? '—'],
-    ['Fecha y hora de salida', new Date(pase.created_at).toLocaleString('es-MX')],
+    ['Fecha y hora de salida', formatoFechaHora(pase.created_at)],
   ]
   const altoCaja = 32
   doc.setFillColor(...GRIS_CLARO)

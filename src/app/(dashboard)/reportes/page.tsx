@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getReportes } from '@/repositories/reporte.repository'
+import { formatoFechaHora } from '@/lib/fecha'
 
 const ESTADO_LABEL: Record<string, string> = {
   abierto: 'Abierto',
@@ -54,7 +55,7 @@ export default async function ReportesUnidadPage() {
               reportes.map((r) => (
                 <tr key={r.id}>
                   <td className="px-4 py-3 font-medium text-slate-900">{r.folio}</td>
-                  <td className="px-4 py-3 text-slate-600">{new Date(r.created_at).toLocaleString('es-MX')}</td>
+                  <td className="px-4 py-3 text-slate-600">{formatoFechaHora(r.created_at)}</td>
                   <td className="px-4 py-3 text-slate-600">{r.vehiculos?.numero_economico ?? '—'}</td>
                   <td className="px-4 py-3 text-slate-600">{r.operadores?.nombre_completo ?? '—'}</td>
                   <td className="px-4 py-3 text-slate-600">{r.descripcion}</td>
