@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getVehiculoById } from '@/repositories/vehiculo.repository'
 import { getLlantas, type Llanta } from '@/repositories/llanta.repository'
 import { generarEjes, etiquetaPosicion } from '@/lib/llantas-config'
+import { BotonGenerarLink } from './boton-generar-link'
 
 type EstadoVisual = 'vacio' | 'bien' | 'atencion' | 'critico'
 
@@ -74,7 +75,7 @@ export default async function LlantasVehiculoPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <Link href="/llantas" className="text-xs font-medium text-brand-dark hover:underline">
             ← Todas las unidades
@@ -83,7 +84,8 @@ export default async function LlantasVehiculoPage({
             Llantas de {vehiculo.numero_economico}
           </h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
+          <BotonGenerarLink vehiculoId={vehiculoId} />
           <Link
             href={`/vehiculos/${vehiculoId}/editar`}
             className="text-xs font-medium text-brand-dark hover:underline"
