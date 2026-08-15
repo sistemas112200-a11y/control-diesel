@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getLlantasSemaforo, type LlantaSemaforo } from '@/repositories/llanta.repository'
-import { etiquetaPosicion } from '@/lib/llantas-config'
+import { generarEjes, etiquetaPosicion } from '@/lib/llantas-config'
 
 type EstadoVisual = 'bien' | 'atencion' | 'critico' | 'sin_medir'
 
@@ -41,9 +41,30 @@ function formatoFecha(fecha: string | null) {
   })
 }
 
+// Calcula, para cada vehículo, en qué número (1, 2, 3...) cae cada posición,
+// en el mismo orden en que se dibujan en el diagrama de la unidad.
+function construirNumeracionPorVehiculo(llantas: LlantaSemaforo[]) {
+  const mapa = new Map<string, Map<string, number>>()
+
+  for (const llanta of llantas) {
+    const vehiculoId = llanta.vehiculo_id
+    const vehiculo = llanta.vehiculos
+    if (!vehiculoId || !vehiculo || mapa.has(vehiculoId)) continue
+
+    const ejes = generarEjes(vehiculo.numero_llantas, vehiculo.tiene_eje_delantero)
+    const posiciones = ejes.flatMap((eje) => eje.posiciones)
+    const numeroPorPosicion = new Map<string, number>()
+    posiciones.forEach((p, i) => numeroPorPosicion.set(p.posicion, i + 1))
+    mapa.set(vehiculoId, numeroPorPosicion)
+  }
+
+  return mapa
+}
+
 export default async function SemaforeoLlantasPage() {
   const supabase = await createClient()
   const llantas = await getLlantasSemaforo(supabase)
+  const numeracionPorVehiculo = construirNumeracionPorVehiculo(llantas)
 
   const filas = llantas
     .map((llanta) => {
@@ -52,14 +73,18 @@ export default async function SemaforeoLlantasPage() {
         llanta.km_instalacion != null && kmActual != null ? kmActual - llanta.km_instalacion : null
       const costoPorKm =
         llanta.costo != null && kmRecorridos != null && kmRecorridos > 0 ? llanta.costo / kmRecorridos : null
+      const numero =
+        llanta.vehiculo_id && llanta.posicion
+          ? numeracionPorVehiculo.get(llanta.vehiculo_id)?.get(llanta.posicion) ?? null
+          : null
 
-      return { llanta, kmRecorridos, costoPorKm, estado: estadoVisualLlanta(llanta) }
+      return { llanta, kmRecorridos, costoPorKm, numero, estado: estadoVisualLlanta(llanta) }
     })
     .sort((a, b) => {
       const unidadA = a.llanta.vehiculos?.numero_economico ?? ''
       const unidadB = b.llanta.vehiculos?.numero_economico ?? ''
       if (unidadA !== unidadB) return unidadA.localeCompare(unidadB)
-      return (a.llanta.posicion ?? '').localeCompare(b.llanta.posicion ?? '')
+      return (a.numero ?? 999) - (b.numero ?? 999)
     })
 
   const conteos = filas.reduce(
@@ -97,6 +122,7 @@ export default async function SemaforeoLlantasPage() {
           <thead className="bg-slate-50 text-slate-500 text-xs uppercase">
             <tr>
               <th className="text-left px-4 py-3">Unidad</th>
+              <th className="text-left px-4 py-3">N°</th>
               <th className="text-left px-4 py-3">Posición</th>
               <th className="text-left px-4 py-3">Marca / medida</th>
               <th className="text-left px-4 py-3">N° serie</th>
@@ -111,14 +137,21 @@ export default async function SemaforeoLlantasPage() {
           <tbody className="divide-y divide-slate-100">
             {filas.length === 0 ? (
               <tr>
-                <td colSpan={10} className="px-4 py-6 text-center text-slate-500">
+                <td colSpan={11} className="px-4 py-6 text-center text-slate-500">
                   Todavía no hay llantas registradas.
                 </td>
               </tr>
             ) : (
-              filas.map(({ llanta, costoPorKm, estado }) => (
+              filas.map(({ llanta, costoPorKm, numero, estado }) => (
                 <tr key={llanta.id}>
                   <td className="px-4 py-3 text-slate-900 font-medium">{llanta.vehiculos?.numero_economico ?? '—'}</td>
+                  <td className="px-4 py-3">
+                    {numero != null && (
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white">
+                        {numero}
+                      </span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-slate-600">{etiquetaPosicion(llanta.posicion)}</td>
                   <td className="px-4 py-3 text-slate-600">{llanta.marca} {llanta.medida ?? ''}</td>
                   <td className="px-4 py-3 text-slate-600">{llanta.numero_serie ?? '—'}</td>
