@@ -52,9 +52,15 @@ export default async function LlantasVehiculoPage({
 
   const ejes = generarEjes(vehiculo.numero_llantas, vehiculo.tiene_eje_delantero)
 
+  // Numeración secuencial de posiciones en el orden en que se dibujan (1, 2, 3...)
+  const posicionesOrdenadas = ejes.flatMap((eje) => eje.posiciones)
+  const numeroPorPosicion = new Map<string, number>()
+  posicionesOrdenadas.forEach((p, i) => numeroPorPosicion.set(p.posicion, i + 1))
+
   function Llantita({ posicion, etiqueta }: { posicion: string; etiqueta: string }) {
     const llanta = porPosicion.get(posicion)
     const estado = estadoVisualLlanta(llanta)
+    const numero = numeroPorPosicion.get(posicion)
     const href = llanta
       ? `/llantas/${vehiculoId}/${llanta.id}`
       : `/llantas/${vehiculoId}/nueva?posicion=${posicion}`
@@ -62,9 +68,14 @@ export default async function LlantasVehiculoPage({
     return (
       <Link
         href={href}
-        className={`flex flex-col items-center justify-center w-20 h-20 rounded-lg border-2 text-center px-1 transition-transform hover:scale-105 ${COLOR_ESTADO[estado]}`}
+        className={`relative flex flex-col items-center justify-center w-20 h-20 rounded-lg border-2 text-center px-1 transition-transform hover:scale-105 ${COLOR_ESTADO[estado]}`}
         title={etiqueta}
       >
+        {numero != null && (
+          <span className="absolute -top-2 -left-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white shadow">
+            {numero}
+          </span>
+        )}
         <span className="text-lg">🛞</span>
         <span className="text-[10px] font-medium leading-tight mt-0.5">
           {llanta?.profundidad_actual_mm != null ? `${llanta.profundidad_actual_mm} mm` : LABEL_ESTADO[estado]}
