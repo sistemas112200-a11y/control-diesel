@@ -113,6 +113,7 @@ export default async function ReporteLlantasPublicoPage({ params }: { params: Pr
           <tr style={{ background: '#f1f1ef' }}>
             <th style={celdaEncabezado}>Posición</th>
             <th style={celdaEncabezado}>Marca / medida</th>
+            <th style={celdaEncabezado}>N° serie</th>
             <th style={{ ...celdaEncabezado, textAlign: 'right' }}>Profundidad</th>
             <th style={{ ...celdaEncabezado, textAlign: 'right' }}>Presión</th>
             <th style={celdaEncabezado}>Estado</th>
@@ -126,6 +127,7 @@ export default async function ReporteLlantasPublicoPage({ params }: { params: Pr
               <tr key={llanta.id}>
                 <td style={celda}>{llanta.posicion ? ETIQUETAS_POSICION[llanta.posicion] ?? llanta.posicion : '—'}</td>
                 <td style={celda}>{llanta.marca} {llanta.medida ?? ''}</td>
+                <td style={celda}>{llanta.numero_serie ?? '—'}</td>
                 <td style={{ ...celda, textAlign: 'right' }}>{llanta.profundidad_actual_mm != null ? `${llanta.profundidad_actual_mm} mm` : '—'}</td>
                 <td style={{ ...celda, textAlign: 'right' }}>{llanta.presion_actual_psi != null ? `${llanta.presion_actual_psi} psi` : '—'}</td>
                 <td style={{ ...celda, color: estado.color }}>{estado.texto}</td>
