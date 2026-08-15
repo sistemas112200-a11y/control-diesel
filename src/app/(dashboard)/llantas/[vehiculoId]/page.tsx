@@ -87,6 +87,12 @@ export default async function LlantasVehiculoPage({
         <div className="flex items-center gap-4">
           <BotonGenerarLink vehiculoId={vehiculoId} />
           <Link
+            href={`/llantas/${vehiculoId}/historial`}
+            className="text-xs font-medium text-brand-dark hover:underline"
+          >
+            Historial de firmas
+          </Link>
+          <Link
             href={`/vehiculos/${vehiculoId}/editar`}
             className="text-xs font-medium text-brand-dark hover:underline"
           >

@@ -56,3 +56,15 @@ export async function guardarFirmaEnlace(
 
   if (error) throw error
 }
+
+export async function getEnlacesFirmadosPorVehiculo(supabase: SupabaseClient, vehiculoId: string) {
+  const { data, error } = await supabase
+    .from('enlaces_publicos_llantas')
+    .select('*')
+    .eq('vehiculo_id', vehiculoId)
+    .not('firma_url', 'is', null)
+    .order('firmado_en', { ascending: false })
+
+  if (error) throw error
+  return data as EnlacePublicoLlanta[]
+}
