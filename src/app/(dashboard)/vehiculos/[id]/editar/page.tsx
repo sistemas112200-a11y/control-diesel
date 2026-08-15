@@ -88,7 +88,23 @@ export default async function EditarVehiculoPage({
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <Campo label="Número de llantas" name="numero_llantas" type="number" defaultValue={String(vehiculo.numero_llantas)} required />
+          <div>
+            <label htmlFor="numero_llantas" className="block text-sm font-medium text-slate-700 mb-1">
+              ¿Cuántas posiciones tiene la unidad?
+            </label>
+            <select
+              id="numero_llantas"
+              name="numero_llantas"
+              defaultValue={String(vehiculo.numero_llantas)}
+              required
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+            >
+              <option value="4">4</option>
+              <option value="6">6</option>
+              <option value="8">8</option>
+              <option value="10">10</option>
+            </select>
+          </div>
           <div className="flex items-center gap-2 pt-6">
             <input
               id="tiene_eje_delantero"

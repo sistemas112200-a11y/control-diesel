@@ -109,13 +109,19 @@ export default async function NuevoVehiculoPage({
 
         <div className="grid grid-cols-2 gap-4 items-end">
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Número de llantas</label>
-            <input
-              type="number"
+            <label className="block text-xs font-medium text-slate-600 mb-1">
+              ¿Cuántas posiciones tiene la unidad?
+            </label>
+            <select
               name="numero_llantas"
               defaultValue="6"
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-            />
+            >
+              <option value="4">4</option>
+              <option value="6">6</option>
+              <option value="8">8</option>
+              <option value="10">10</option>
+            </select>
           </div>
           <div className="flex flex-col gap-1">
             <label className="flex items-center gap-2 text-sm text-slate-700">
