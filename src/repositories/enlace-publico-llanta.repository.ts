@@ -10,6 +10,7 @@ export interface EnlacePublicoLlanta {
   firma_url: string | null
   firmado_por: string | null
   firmado_en: string | null
+  datos_snapshot: unknown | null
 }
 
 function generarToken() {
@@ -43,7 +44,7 @@ export async function getEnlacePorToken(supabase: SupabaseClient, token: string)
 export async function guardarFirmaEnlace(
   supabase: SupabaseClient,
   token: string,
-  datos: { firma_url: string; firmado_por: string }
+  datos: { firma_url: string; firmado_por: string; datos_snapshot: unknown }
 ) {
   const { error } = await supabase
     .from('enlaces_publicos_llantas')
@@ -51,6 +52,7 @@ export async function guardarFirmaEnlace(
       firma_url: datos.firma_url,
       firmado_por: datos.firmado_por,
       firmado_en: new Date().toISOString(),
+      datos_snapshot: datos.datos_snapshot,
     })
     .eq('token', token)
 

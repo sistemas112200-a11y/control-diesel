@@ -19,10 +19,15 @@ const ETIQUETAS_POSICION: Record<string, string> = {
 
 function formatoFecha(fecha: string | null) {
   if (!fecha) return '—'
-  return new Date(fecha).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })
+  return new Date(fecha).toLocaleDateString('es-MX', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'America/Chihuahua',
+  })
 }
 
-function estadoLlanta(llanta: LlantaConVehiculo) {
+function estadoLlanta(llanta: Pick<LlantaConVehiculo, 'profundidad_actual_mm' | 'profundidad_minima_mm' | 'presion_actual_psi' | 'presion_recomendada_psi'>) {
   if (llanta.profundidad_actual_mm == null) {
     return { texto: 'Sin medición', color: '#888888' }
   }
@@ -42,6 +47,11 @@ function estadoLlanta(llanta: LlantaConVehiculo) {
 const celdaEncabezado: CSSProperties = { textAlign: 'left', padding: '6px 8px', border: '1px solid #ddd' }
 const celda: CSSProperties = { padding: '6px 8px', border: '1px solid #ddd' }
 
+interface DatosReporte {
+  vehiculo: { numero_economico: string; placas: string | null; km_actual: number | null } | null
+  llantas: LlantaConVehiculo[]
+}
+
 export default async function ReporteLlantasPublicoPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
   const supabase = createAdminClient()
@@ -53,13 +63,21 @@ export default async function ReporteLlantasPublicoPage({ params }: { params: Pr
     notFound()
   }
 
-  const llantas = await getLlantas(supabase, { vehiculoId: enlace.vehiculo_id })
+  const yaFirmado = Boolean(enlace.firma_url)
 
-  const { data: vehiculo } = await supabase
-    .from('vehiculos')
-    .select('numero_economico, placas, km_actual')
-    .eq('id', enlace.vehiculo_id)
-    .single()
+  let datos: DatosReporte
+  if (yaFirmado && enlace.datos_snapshot) {
+    // Reporte ya firmado: se muestra exactamente como estaba cuando se firmó, no los datos actuales.
+    datos = enlace.datos_snapshot as DatosReporte
+  } else {
+    const llantas = await getLlantas(supabase, { vehiculoId: enlace.vehiculo_id })
+    const { data: vehiculo } = await supabase
+      .from('vehiculos')
+      .select('numero_economico, placas, km_actual')
+      .eq('id', enlace.vehiculo_id)
+      .single()
+    datos = { vehiculo, llantas }
+  }
 
   return (
     <div style={{ maxWidth: 700, margin: '0 auto', padding: '32px 20px', fontFamily: 'sans-serif', color: '#1a1a1a' }}>
@@ -69,22 +87,24 @@ export default async function ReporteLlantasPublicoPage({ params }: { params: Pr
           <p style={{ fontSize: 12, color: '#666', margin: '4px 0 0' }}>Reporte de llantas por unidad</p>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <p style={{ fontSize: 12, color: '#666', margin: 0 }}>Generado: {formatoFecha(new Date().toISOString())}</p>
+          <p style={{ fontSize: 12, color: '#666', margin: 0 }}>
+            {yaFirmado ? `Firmado el: ${formatoFecha(enlace.firmado_en)}` : `Generado: ${formatoFecha(new Date().toISOString())}`}
+          </p>
         </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 18, fontSize: 12 }}>
         <div>
           <span style={{ color: '#888' }}>Unidad</span>
-          <p style={{ margin: '2px 0 0', fontWeight: 500, fontSize: 14 }}>{vehiculo?.numero_economico ?? '—'}</p>
+          <p style={{ margin: '2px 0 0', fontWeight: 500, fontSize: 14 }}>{datos.vehiculo?.numero_economico ?? '—'}</p>
         </div>
         <div>
           <span style={{ color: '#888' }}>Placas</span>
-          <p style={{ margin: '2px 0 0', fontWeight: 500, fontSize: 14 }}>{vehiculo?.placas ?? '—'}</p>
+          <p style={{ margin: '2px 0 0', fontWeight: 500, fontSize: 14 }}>{datos.vehiculo?.placas ?? '—'}</p>
         </div>
         <div>
-          <span style={{ color: '#888' }}>Km actual</span>
-          <p style={{ margin: '2px 0 0', fontWeight: 500, fontSize: 14 }}>{vehiculo?.km_actual?.toLocaleString('es-MX') ?? '—'}</p>
+          <span style={{ color: '#888' }}>Km {yaFirmado ? 'al firmar' : 'actual'}</span>
+          <p style={{ margin: '2px 0 0', fontWeight: 500, fontSize: 14 }}>{datos.vehiculo?.km_actual?.toLocaleString('es-MX') ?? '—'}</p>
         </div>
       </div>
 
@@ -100,11 +120,11 @@ export default async function ReporteLlantasPublicoPage({ params }: { params: Pr
           </tr>
         </thead>
         <tbody>
-          {llantas.map((llanta) => {
+          {datos.llantas.map((llanta) => {
             const estado = estadoLlanta(llanta)
             return (
               <tr key={llanta.id}>
-                <td style={celda}>{llanta.posicion ? ETIQUETAS_POSICION[llanta.posicion] : '—'}</td>
+                <td style={celda}>{llanta.posicion ? ETIQUETAS_POSICION[llanta.posicion] ?? llanta.posicion : '—'}</td>
                 <td style={celda}>{llanta.marca} {llanta.medida ?? ''}</td>
                 <td style={{ ...celda, textAlign: 'right' }}>{llanta.profundidad_actual_mm != null ? `${llanta.profundidad_actual_mm} mm` : '—'}</td>
                 <td style={{ ...celda, textAlign: 'right' }}>{llanta.presion_actual_psi != null ? `${llanta.presion_actual_psi} psi` : '—'}</td>
