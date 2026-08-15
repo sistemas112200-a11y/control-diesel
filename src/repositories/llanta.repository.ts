@@ -38,6 +38,10 @@ export interface LlantaConVehiculo extends Llanta {
   vehiculos: { numero_economico: string } | null
 }
 
+export interface LlantaSemaforo extends Llanta {
+  vehiculos: { numero_economico: string; km_actual: number | null } | null
+}
+
 export interface NuevaLlantaInput {
   vehiculo_id?: string | null
   posicion?: PosicionLlanta | null
@@ -84,6 +88,17 @@ export async function getLlantaById(supabase: SupabaseClient, id: string) {
 
   if (error) throw error
   return data as unknown as LlantaConVehiculo
+}
+
+export async function getLlantasSemaforo(supabase: SupabaseClient) {
+  const { data, error } = await supabase
+    .from('llantas')
+    .select('*, vehiculos(numero_economico, km_actual)')
+    .eq('estado', 'en_uso')
+    .is('deleted_at', null)
+
+  if (error) throw error
+  return data as unknown as LlantaSemaforo[]
 }
 
 export async function crearLlanta(supabase: SupabaseClient, input: NuevaLlantaInput) {
