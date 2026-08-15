@@ -1,129 +1,158 @@
-'use client'
-
-import { useState, useEffect, type ReactNode } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import type { ModuloVista } from '@/lib/auth/permissions'
+import { createClient } from '@/lib/supabase/server'
+import { getLlantasSemaforo, type LlantaSemaforo } from '@/repositories/llanta.repository'
+import { etiquetaPosicion } from '@/lib/llantas-config'
 
-type Item = { href: string; label: string; modulo: ModuloVista }
+type EstadoVisual = 'bien' | 'atencion' | 'critico' | 'sin_medir'
 
-const ITEMS_PRINCIPALES: Item[] = [
-  { href: '/dashboard', label: 'Dashboard', modulo: 'dashboard' },
-]
-
-const ITEMS_ALTAS: Item[] = [
-  { href: '/vehiculos', label: 'Flota', modulo: 'vehiculos' },
-  { href: '/operadores', label: 'Operadores', modulo: 'operadores' },
-]
-
-const ITEMS_DIESEL: Item[] = [
-  { href: '/dashboard-diesel', label: 'Dashboard - Diésel', modulo: 'dashboard_diesel' },
-  { href: '/cargas', label: 'Cargas', modulo: 'cargas' },
-  { href: '/reportes', label: 'Reportes', modulo: 'reportes' },
-  { href: '/alertas', label: 'Alertas', modulo: 'alertas' },
-]
-
-const ITEMS_TALLER: Item[] = [
-  { href: '/mantenimientos', label: 'Mantenimientos', modulo: 'mantenimientos' },
-  { href: '/reportes-unidad', label: 'Órdenes de trabajo', modulo: 'reportes_unidad' },
-  { href: '/llantas', label: 'Llantas', modulo: 'llantas' },
-  { href: '/llantas/semaforeo', label: 'Semaforeo', modulo: 'llantas' },
-  { href: '/mecanicos', label: 'Mecánicos', modulo: 'mecanicos' },
-]
-
-const ITEMS_ALMACEN: Item[] = [
-  { href: '/almacen/productos', label: 'Productos', modulo: 'almacen' },
-  { href: '/almacen/salidas', label: 'Salidas', modulo: 'almacen' },
-]
-
-const ITEMS_FINALES: Item[] = [
-  { href: '/pases-salida', label: 'Pases de salida', modulo: 'pases_salida' },
-  { href: '/usuarios', label: 'Usuarios', modulo: 'usuarios' },
-  { href: '/configuracion', label: 'Configuración', modulo: 'configuracion' },
-]
-
-function Grupo({
-  titulo,
-  items,
-  pathname,
-  renderLink,
-}: {
-  titulo: string
-  items: Item[]
-  pathname: string
-  renderLink: (item: Item) => ReactNode
-}) {
-  const activo = items.some((item) => pathname.startsWith(item.href))
-  const [abierto, setAbierto] = useState(activo)
-
-  useEffect(() => {
-    if (activo) setAbierto(true)
-  }, [activo])
-
-  if (items.length === 0) return null
-
-  return (
-    <div>
-      <button
-        type="button"
-        onClick={() => setAbierto((v) => !v)}
-        className={`w-full flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors ${
-          activo ? 'text-white font-medium' : 'text-slate-300 hover:bg-sidebar-hover hover:text-white'
-        }`}
-      >
-        <span>{titulo}</span>
-        <span className={`text-xs transition-transform ${abierto ? 'rotate-90' : ''}`}>›</span>
-      </button>
-      {abierto && (
-        <div className="ml-3 mt-1 space-y-1 border-l border-sidebar-hover pl-2">
-          {items.map(renderLink)}
-        </div>
-      )}
-    </div>
-  )
+function estadoVisualLlanta(llanta: LlantaSemaforo): EstadoVisual {
+  if (llanta.profundidad_actual_mm == null) return 'sin_medir'
+  if (llanta.profundidad_actual_mm <= llanta.profundidad_minima_mm) return 'critico'
+  if (llanta.presion_actual_psi != null && llanta.presion_recomendada_psi) {
+    const diferencia = Math.abs(llanta.presion_actual_psi - llanta.presion_recomendada_psi) / llanta.presion_recomendada_psi
+    if (diferencia > 0.15) return 'atencion'
+  }
+  const margen = llanta.profundidad_actual_mm - llanta.profundidad_minima_mm
+  if (margen <= 2) return 'atencion'
+  return 'bien'
 }
 
-export function Sidebar({ modulosVisibles }: { modulosVisibles: ModuloVista[] }) {
-  const pathname = usePathname()
-  const visibles = new Set(modulosVisibles)
+const COLOR_ESTADO: Record<EstadoVisual, string> = {
+  bien: 'bg-green-100 border-green-400 text-green-700',
+  atencion: 'bg-amber-100 border-amber-400 text-amber-700',
+  critico: 'bg-red-100 border-red-400 text-red-700',
+  sin_medir: 'bg-slate-200 border-slate-300 text-slate-500',
+}
 
-  const itemsPrincipales = ITEMS_PRINCIPALES.filter((item) => visibles.has(item.modulo))
-  const itemsAltas = ITEMS_ALTAS.filter((item) => visibles.has(item.modulo))
-  const itemsDiesel = ITEMS_DIESEL.filter((item) => visibles.has(item.modulo))
-  const itemsTaller = ITEMS_TALLER.filter((item) => visibles.has(item.modulo))
-  const itemsAlmacen = ITEMS_ALMACEN.filter((item) => visibles.has(item.modulo))
-  const itemsFinales = ITEMS_FINALES.filter((item) => visibles.has(item.modulo))
+const LABEL_ESTADO: Record<EstadoVisual, string> = {
+  bien: 'Bien',
+  atencion: 'Revisar',
+  critico: 'Crítico',
+  sin_medir: 'Sin medir',
+}
 
-  function renderLink(item: Item) {
-    const activo = item.href === '/llantas' ? pathname === '/llantas' : pathname.startsWith(item.href)
-    return (
-      <Link
-        key={item.href}
-        href={item.href}
-        className={`block rounded-md px-3 py-2 text-sm transition-colors ${
-          activo
-            ? 'bg-sidebar-hover text-brand font-medium'
-            : 'text-slate-300 hover:bg-sidebar-hover hover:text-white'
-        }`}
-      >
-        {item.label}
-      </Link>
-    )
-  }
+function formatoFecha(fecha: string | null) {
+  if (!fecha) return '—'
+  return new Date(fecha).toLocaleDateString('es-MX', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'America/Chihuahua',
+  })
+}
+
+export default async function SemaforeoLlantasPage() {
+  const supabase = await createClient()
+  const llantas = await getLlantasSemaforo(supabase)
+
+  const filas = llantas
+    .map((llanta) => {
+      const kmActual = llanta.vehiculos?.km_actual ?? null
+      const kmRecorridos =
+        llanta.km_instalacion != null && kmActual != null ? kmActual - llanta.km_instalacion : null
+      const costoPorKm =
+        llanta.costo != null && kmRecorridos != null && kmRecorridos > 0 ? llanta.costo / kmRecorridos : null
+
+      return { llanta, kmRecorridos, costoPorKm, estado: estadoVisualLlanta(llanta) }
+    })
+    .sort((a, b) => {
+      const unidadA = a.llanta.vehiculos?.numero_economico ?? ''
+      const unidadB = b.llanta.vehiculos?.numero_economico ?? ''
+      if (unidadA !== unidadB) return unidadA.localeCompare(unidadB)
+      return (a.llanta.posicion ?? '').localeCompare(b.llanta.posicion ?? '')
+    })
+
+  const conteos = filas.reduce(
+    (acc, f) => {
+      acc[f.estado]++
+      return acc
+    },
+    { bien: 0, atencion: 0, critico: 0, sin_medir: 0 } as Record<EstadoVisual, number>
+  )
 
   return (
-    <aside className="w-56 shrink-0 bg-sidebar min-h-screen flex flex-col py-4 print:hidden">
-      <div className="px-4 mb-6">
-        <span className="text-white font-semibold text-sm">Control de Diésel</span>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-lg font-semibold text-slate-900">Semaforeo de llantas</h1>
+        <p className="text-sm text-slate-500 mt-1">Todas las unidades y sus llantas en un solo lugar.</p>
       </div>
-      <nav className="flex-1 px-2 space-y-1">
-        {itemsPrincipales.map(renderLink)}
-        <Grupo titulo="Altas" items={itemsAltas} pathname={pathname} renderLink={renderLink} />
-        <Grupo titulo="Diésel" items={itemsDiesel} pathname={pathname} renderLink={renderLink} />
-        <Grupo titulo="Taller" items={itemsTaller} pathname={pathname} renderLink={renderLink} />
-        <Grupo titulo="Almacén" items={itemsAlmacen} pathname={pathname} renderLink={renderLink} />
-        {itemsFinales.map(renderLink)}
-      </nav>
-    </aside>
+
+      <div className="flex flex-wrap gap-3">
+        <span className={`rounded-full px-3 py-1.5 text-xs font-medium border ${COLOR_ESTADO.bien}`}>
+          Bien: {conteos.bien}
+        </span>
+        <span className={`rounded-full px-3 py-1.5 text-xs font-medium border ${COLOR_ESTADO.atencion}`}>
+          Revisar: {conteos.atencion}
+        </span>
+        <span className={`rounded-full px-3 py-1.5 text-xs font-medium border ${COLOR_ESTADO.critico}`}>
+          Crítico: {conteos.critico}
+        </span>
+        <span className={`rounded-full px-3 py-1.5 text-xs font-medium border ${COLOR_ESTADO.sin_medir}`}>
+          Sin medir: {conteos.sin_medir}
+        </span>
+      </div>
+
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50 text-slate-500 text-xs uppercase">
+            <tr>
+              <th className="text-left px-4 py-3">Unidad</th>
+              <th className="text-left px-4 py-3">Posición</th>
+              <th className="text-left px-4 py-3">Marca / medida</th>
+              <th className="text-left px-4 py-3">N° serie</th>
+              <th className="text-left px-4 py-3">Profundidad</th>
+              <th className="text-left px-4 py-3">Estado</th>
+              <th className="text-left px-4 py-3">Fecha instalación</th>
+              <th className="text-right px-4 py-3">Costo</th>
+              <th className="text-right px-4 py-3">Costo/km</th>
+              <th className="text-left px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {filas.length === 0 ? (
+              <tr>
+                <td colSpan={10} className="px-4 py-6 text-center text-slate-500">
+                  Todavía no hay llantas registradas.
+                </td>
+              </tr>
+            ) : (
+              filas.map(({ llanta, costoPorKm, estado }) => (
+                <tr key={llanta.id}>
+                  <td className="px-4 py-3 text-slate-900 font-medium">{llanta.vehiculos?.numero_economico ?? '—'}</td>
+                  <td className="px-4 py-3 text-slate-600">{etiquetaPosicion(llanta.posicion)}</td>
+                  <td className="px-4 py-3 text-slate-600">{llanta.marca} {llanta.medida ?? ''}</td>
+                  <td className="px-4 py-3 text-slate-600">{llanta.numero_serie ?? '—'}</td>
+                  <td className="px-4 py-3 text-slate-600">
+                    {llanta.profundidad_actual_mm != null ? `${llanta.profundidad_actual_mm} mm` : '—'}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`rounded-full px-2 py-1 text-xs font-medium border ${COLOR_ESTADO[estado]}`}>
+                      {LABEL_ESTADO[estado]}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-slate-600">{formatoFecha(llanta.fecha_instalacion)}</td>
+                  <td className="px-4 py-3 text-slate-600 text-right">
+                    {llanta.costo != null ? `$${llanta.costo.toFixed(2)}` : '—'}
+                  </td>
+                  <td className="px-4 py-3 text-slate-600 text-right">
+                    {costoPorKm != null ? `$${costoPorKm.toFixed(3)}` : '—'}
+                  </td>
+                  <td className="px-4 py-3">
+                    {llanta.vehiculo_id && (
+                      <Link
+                        href={`/llantas/${llanta.vehiculo_id}/${llanta.id}`}
+                        className="text-xs font-medium text-brand-dark hover:underline"
+                      >
+                        Ver
+                      </Link>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
   )
 }
