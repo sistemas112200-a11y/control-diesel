@@ -71,7 +71,7 @@ export default async function LlantasPage({
                   <tr key={v.id}>
                     <td className="px-4 py-3 font-medium text-slate-900">{v.numero_economico}</td>
                     <td className="px-4 py-3 text-slate-600">{v.marca} {v.modelo}</td>
-                    <td className="px-4 py-3 text-slate-600">{lista.length} / 6</td>
+                    <td className="px-4 py-3 text-slate-600">{lista.length} / {v.numero_llantas}</td>
                     <td className="px-4 py-3">
                       {alertas > 0 ? (
                         <span className="rounded-full px-2 py-1 text-xs font-medium bg-red-100 text-red-700">
